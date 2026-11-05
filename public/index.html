@@ -94,6 +94,8 @@ button{cursor:pointer}
 .card .muted{color:var(--muted)}
 .spines .detail{margin-block:4px 8px}
 .empty{color:var(--muted);padding:26px 0;text-align:center}
+.pie{margin-top:24px;padding-top:16px;border-top:1.5px solid var(--line);color:var(--muted);font-size:14px;text-align:center;text-wrap:balance}
+.pie a{color:inherit;font-weight:700}
 .who{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:flex-end;font-size:15px;min-height:34px}
 .who a{color:inherit;font-weight:700}
 .who .btnl{border:1.5px solid var(--btn);border-radius:999px;padding:5px 14px;text-decoration:none;background:var(--surface)}
@@ -137,6 +139,11 @@ button{cursor:pointer}
     <div class="news" id="news"></div>
   </div>
   <div id="list"><p class="empty">Cargando la estantería…</p></div>
+  <footer class="pie">
+    <a href="https://github.com/hombrelobo2/biblioteca" rel="noopener">Nuestra Estantería</a> es software libre con licencia
+    <a href="https://www.gnu.org/licenses/gpl-3.0.html" rel="noopener license">GPL v3</a>.
+    <a href="https://github.com/hombrelobo2/biblioteca" rel="noopener">Código e instalación en GitHub</a>.
+  </footer>
 </div>
 <script>
 (function(){

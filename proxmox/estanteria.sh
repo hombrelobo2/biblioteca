@@ -61,11 +61,12 @@ if [ "${1:-}" = "actualizar" ]; then
   [ -n "$ID" ] || fallo "Indica el número del contenedor: … actualizar 112"
   pct status "$ID" >/dev/null 2>&1 || fallo "No existe el contenedor $ID."
   info "Actualizando Nuestra Estantería en el contenedor $ID"
+  export LANG=C.UTF-8 LC_ALL=C.UTF-8
   if pct exec "$ID" -- test -x /usr/local/sbin/estanteria-actualizar; then
     pct exec "$ID" -- env ESTANTERIA_REPO="$REPO" ESTANTERIA_RAMA="$RAMA" /usr/local/sbin/estanteria-actualizar
   else
     # Instalaciones antiguas (sin el comando): se descarga y se instala igual
-    pct exec "$ID" -- bash -c "set -e; apt-get install -y -qq curl ca-certificates >/dev/null; T=\$(mktemp -d); \
+    pct exec "$ID" -- bash -c "set -e; export LANG=C.UTF-8 LC_ALL=C.UTF-8; apt-get install -y -qq curl ca-certificates >/dev/null; T=\$(mktemp -d); \
       curl -fsSL https://github.com/$REPO/archive/refs/heads/$RAMA.tar.gz | tar -xz -C \$T --strip-components=1; \
       bash \$T/install.sh; rm -rf \$T"
   fi
@@ -80,7 +81,13 @@ echo
 
 # ---------- Valores ----------
 SIG_ID=$(pvesh get /cluster/nextid 2>/dev/null || echo 200)
-ALMACEN_DEF=$(pvesm status -content rootdir 2>/dev/null | awk 'NR>1 && $3=="active" {print $1; exit}')
+# Almacenamiento para el disco: se prefieren los habituales (local-lvm, local-zfs) antes que cualquier otro
+ALMACENES=$(pvesm status -content rootdir 2>/dev/null | awk 'NR>1 && $3=="active" {print $1}' || true)
+ALMACEN_DEF=""
+for a in local-lvm local-zfs; do
+  if echo "$ALMACENES" | grep -qx "$a"; then ALMACEN_DEF=$a; break; fi
+done
+[ -n "$ALMACEN_DEF" ] || ALMACEN_DEF=$(echo "$ALMACENES" | head -n1)
 ALMACEN_DEF=${ALMACEN_DEF:-local-lvm}
 PLANTILLAS=$(pvesm status -content vztmpl 2>/dev/null | awk 'NR>1 && $3=="active" {print $1; exit}')
 PLANTILLAS=${PLANTILLAS:-local}
@@ -159,6 +166,8 @@ ok "Red lista"
 
 # Misma zona horaria que el host (los recordatorios salen a las 10:00 de esa hora)
 ZONA=$(timedatectl show -p Timezone --value 2>/dev/null || cat /etc/timezone 2>/dev/null || echo "Etc/UTC")
+# El host suele pasar LANG=en_US.UTF-8, que la plantilla no trae: se usa C.UTF-8 para evitar avisos
+export LANG=C.UTF-8 LC_ALL=C.UTF-8
 pct exec "$CT_ID" -- bash -c "ln -sf /usr/share/zoneinfo/$ZONA /etc/localtime && echo $ZONA > /etc/timezone" || true
 
 # ---------- Instalar la estantería ----------
@@ -174,7 +183,7 @@ chmod 600 "$TMPENV"
 pct push "$CT_ID" "$TMPENV" /root/.estanteria-instalar.env --perms 600
 rm -f "$TMPENV"
 pct exec "$CT_ID" -- bash -c "set -e
-  export DEBIAN_FRONTEND=noninteractive
+  export DEBIAN_FRONTEND=noninteractive LANG=C.UTF-8 LC_ALL=C.UTF-8
   apt-get update -qq && apt-get install -y -qq curl ca-certificates locales >/dev/null
   sed -i 's/^# *es_ES.UTF-8/es_ES.UTF-8/' /etc/locale.gen && locale-gen >/dev/null 2>&1 || true
   T=\$(mktemp -d)
@@ -185,7 +194,8 @@ pct exec "$CT_ID" -- bash -c "set -e
   rm -rf \$T"
 ok "Instalada"
 
-IP=$(pct exec "$CT_ID" -- ip -4 -o addr show dev eth0 2>/dev/null | awk '{print $4}' | cut -d/ -f1)
+IP=$(pct exec "$CT_ID" -- ip -4 -o addr show dev eth0 2>/dev/null | awk '{print $4}' | cut -d/ -f1 || true)
+IP=${IP:-IP-DEL-CONTENEDOR}
 echo
 echo "${N}🎉 Listo${X}"
 echo "   Estantería:       http://$IP/"

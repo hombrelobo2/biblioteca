@@ -19,6 +19,8 @@ ETC=/etc/estanteria
 
 echo "==> Instalando paquetes del sistema"
 export DEBIAN_FRONTEND=noninteractive
+# Evita los avisos de «locale» cuando el idioma de quien conecta no está instalado en el contenedor
+locale -a 2>/dev/null | grep -qix "${LANG:-C.UTF-8}" || export LANG=C.UTF-8 LC_ALL=C.UTF-8
 apt-get update -qq
 apt-get install -y -qq python3 python3-venv nginx sqlite3 curl ca-certificates >/dev/null
 
@@ -102,6 +104,8 @@ if [ "$LIBROS" = "0" ] && [ -f "$ORIGEN/datos-iniciales/libros.json" ]; then
   cp -r "$ORIGEN/datos-iniciales" "$APP/datos-iniciales"
   chmod -R a+rX "$APP/datos-iniciales"
   runuser -u estanteria -- env ESTANTERIA_DATA="$DATA" "$APP/venv/bin/python" "$APP/app/importar.py" "$APP/datos-iniciales"
+elif [ "$LIBROS" = "0" ]; then
+  echo "    Base de datos nueva y vacía: añade bibliotecas y libros desde /admin."
 else
   echo "    La base de datos ya tiene $LIBROS libros: se conserva tal cual."
 fi

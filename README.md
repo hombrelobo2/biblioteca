@@ -113,6 +113,6 @@ O dentro del contenedor: `estanteria-actualizar`. Antes de tocar nada se guarda 
 
 ## Licencia
 
-[MIT](LICENSE). Úsala, cámbiala y compártela libremente.
+Nuestra Estantería es **software libre** bajo la licencia [GNU GPL v3](LICENSE): puedes usarla, estudiarla, cambiarla y compartirla. Si distribuyes una versión modificada, tiene que seguir siendo libre y con la misma licencia.
 
 Los datos de los libros y las portadas vienen de las fuentes consultadas. Son para uso privado del grupo de familias.
