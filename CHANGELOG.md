@@ -1,5 +1,11 @@
 # Novedades
 
+## 1.2.0 — 2026-11-05
+
+- Nuevo aspecto más alegre para los niños: colores cálidos de papel, un búho lector en la portada, cada biblioteca en su tarjeta de color («La estantería de…») y una tabla de madera bajo cada colección.
+- Letra redondeada (Fredoka) en los títulos y botón «¿Me lo prestas?» más grande.
+- «Mi cuenta» y la administración usan los mismos colores cálidos, también en modo oscuro.
+
 ## 1.1.0 — 2026-11-05
 
 - Importar una copia de seguridad desde el panel (el .zip de «Descargar copia» o la base de datos que llega por Telegram).

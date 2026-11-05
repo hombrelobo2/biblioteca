@@ -4,24 +4,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600;700&display=swap">
 <title>{% block titulo %}Administración{% endblock %} · Nuestra Estantería</title>
 <style>
 :root{
-  --bg:#edf0f5; --surface:#fff; --ink:#15213a; --muted:#566381; --line:#d3dae6; --focus:#ffd43b;
-  --btn:#15213a; --btn-ink:#fff; --ok:#2b7a3a; --warn:#a14d00; --danger:#b42318; --soft:#f5f7fa;
+  --bg:#fbf3e4; --surface:#fff; --ink:#3b2a1a; --muted:#7a6350; --line:#ecd9bb; --focus:#ffd43b;
+  --btn:#3b2a1a; --btn-ink:#fff; --ok:#2b7a3a; --warn:#a14d00; --danger:#b42318; --soft:#fdf7ec;
   --body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --bg:#0f1628; --surface:#1a2440; --ink:#eaeef7; --muted:#9daac4; --line:#2e3b5c; --btn:#eaeef7; --btn-ink:#0f1628;
-  --ok:#69c27a; --warn:#f0a35a; --danger:#ff8a80; --soft:#141d33; color-scheme:dark } }
+  --bg:#1d150f; --surface:#2a2018; --ink:#f6ead8; --muted:#c9b39a; --line:#4a3a2c; --btn:#f6ead8; --btn-ink:#1d150f;
+  --ok:#69c27a; --warn:#f0a35a; --danger:#ff8a80; --soft:#231a13; color-scheme:dark } }
 :root[data-theme="dark"]{
-  --bg:#0f1628; --surface:#1a2440; --ink:#eaeef7; --muted:#9daac4; --line:#2e3b5c; --btn:#eaeef7; --btn-ink:#0f1628;
-  --ok:#69c27a; --warn:#f0a35a; --danger:#ff8a80; --soft:#141d33; color-scheme:dark }
+  --bg:#1d150f; --surface:#2a2018; --ink:#f6ead8; --muted:#c9b39a; --line:#4a3a2c; --btn:#f6ead8; --btn-ink:#1d150f;
+  --ok:#69c27a; --warn:#f0a35a; --danger:#ff8a80; --soft:#231a13; color-scheme:dark }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 var(--body)}
 a{color:inherit}
-h1,h2,h3{margin:0;line-height:1.15;text-wrap:balance}
+h1,h2,h3{margin:0;line-height:1.15;text-wrap:balance;font-family:"Fredoka","Trebuchet MS",system-ui,sans-serif;font-weight:600}
 h1{font-size:clamp(24px,5vw,32px)} h2{font-size:20px} h3{font-size:16px}
 p{margin:0}
 .top{background:var(--surface);border-bottom:1.5px solid var(--line)}
