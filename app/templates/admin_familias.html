@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block titulo %}Familias{% endblock %}
+{% block cuerpo %}
+<h1>Familias</h1>
+<p class="muted">Una cuenta por familia, la lleva una persona adulta. Solo pueden pedir libros las familias con cuenta. Cada familia es responsable de los libros que tiene prestados.</p>
+<div class="card scroll">
+  <table>
+    <thead><tr><th>Familia</th><th class="hide-s">Usuario</th><th>Biblioteca</th><th class="n">Préstamos</th><th class="hide-s">Telegram</th><th class="hide-s">Último acceso</th></tr></thead>
+    <tbody>
+    {% for f in familias %}
+      <tr {% if not f.activa %}class="muted"{% endif %}>
+        <td><a href="{{ url_for('adminp.familia', fid=f.id) }}"><b>{{ f.nombre }}</b></a>
+          {% if not f.activa %}<span class="tag">desactivada</span>{% elif not f.clave_hash %}<span class="tag warn">invitación sin usar</span>{% endif %}</td>
+        <td class="hide-s">{{ f.usuario }}</td>
+        <td>{{ f.bibs or '—' }}</td>
+        <td class="n">{{ f.abiertos }}</td>
+        <td class="hide-s">{% if f.telegram_chat %}<span class="tag ok">sí</span>{% else %}<span class="tag">no</span>{% endif %}</td>
+        <td class="hide-s">{{ fecha_bonita(f.ultimo_acceso) or '—' }}</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="6" class="muted">Todavía no hay familias. Crea la primera aquí abajo.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<form class="card" method="post" action="{{ url_for('adminp.familia_nueva') }}">
+  <h2>Nueva familia</h2>
+  <div class="row">
+    <label>Nombre que verán las demás familias<input type="text" name="nombre" maxlength="60" placeholder="Por ejemplo: Ane y Jon" required></label>
+    <label>Usuario para entrar (opcional)<input type="text" name="usuario" maxlength="30" placeholder="Se crea solo si lo dejas vacío" autocapitalize="none"></label>
+  </div>
+  {% if bibs %}
+  <fieldset style="border:0;padding:0;margin:0;display:flex;flex-direction:column;gap:6px">
+    <legend style="font-weight:700;font-size:14px;margin-bottom:6px">Sus bibliotecas (los libros que presta esta familia)</legend>
+    <div class="row">{% for b in bibs %}<label class="check"><input type="checkbox" name="bibliotecas" value="{{ b.id }}"> {{ b.nombre }}{% if b.familia %} <span class="muted">(ahora de {{ b.familia }})</span>{% endif %}</label>{% endfor %}</div>
+  </fieldset>
+  {% endif %}
+  <p><button class="btn solid">Crear y sacar enlace de invitación</button></p>
+  <input type="hidden" name="csrf" value="{{ csrf() }}">
+</form>
+
+<div class="card">
+  <h2>Tu Telegram (administración)</h2>
+  {% if not telegram_ok %}
+    <p>Para los avisos por Telegram, crea un bot con <b>@BotFather</b>, copia el token y ponlo en <code>/etc/estanteria/estanteria.env</code> como <code>TELEGRAM_BOT_TOKEN=…</code>. Después: <code>systemctl restart estanteria estanteria-bot</code>.</p>
+  {% elif admin_chat %}
+    <p>✅ Vinculado{% if bot %} con @{{ bot }}{% endif %}. Te llegarán los desacuerdos entre familias y, cada domingo, una copia de la base de datos.</p>
+    <div class="row">
+      <form method="post" action="{{ url_for('adminp.telegram_probar') }}"><input type="hidden" name="csrf" value="{{ csrf() }}"><button class="btn small">Enviar mensaje de prueba</button></form>
+      <form method="post" action="{{ url_for('adminp.telegram_admin_quitar') }}"><input type="hidden" name="csrf" value="{{ csrf() }}"><button class="btn small">Desvincular</button></form>
+    </div>
+  {% else %}
+    <p>Vincula tu Telegram para recibir los desacuerdos y la copia semanal de la base de datos.</p>
+    <form method="post" action="{{ url_for('adminp.telegram_admin') }}" target="_blank"><input type="hidden" name="csrf" value="{{ csrf() }}"><button class="btn solid">Vincular mi Telegram</button></form>
+  {% endif %}
+</div>
+<form class="card" id="clave" method="post" action="{{ url_for('cambiar_clave_admin') }}">
+  <h2>Contraseña de administración</h2>
+  <div class="row" style="align-items:flex-end">
+    <input type="text" name="usuario" value="admin" autocomplete="username" hidden>
+    <label>Contraseña actual<input type="password" name="actual" autocomplete="current-password" required></label>
+    <label>Nueva (mínimo 8)<input type="password" name="clave" minlength="8" autocomplete="new-password" required></label>
+    <label>Repite la nueva<input type="password" name="clave2" minlength="8" autocomplete="new-password" required></label>
+    <button class="btn">Cambiar</button>
+  </div>
+  <p class="muted" style="font-size:14px">Si la olvidas, entra en el contenedor y ejecuta <code>estanteria-cambiar-clave</code>.</p>
+  <input type="hidden" name="csrf" value="{{ csrf() }}">
+</form>
+{% endblock %}

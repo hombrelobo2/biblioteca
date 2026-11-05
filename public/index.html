@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Nuestra Estantería</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
+<style>
+/* Escaparate: datos en libros.json y portadas como imágenes sueltas en /portadas, que el móvil solo descarga al acercarse a ellas. */
+:root{
+  --bg:#edf0f5; --surface:#ffffff; --ink:#15213a; --muted:#566381; --line:#d3dae6; --focus:#ffd43b;
+  --btn:#15213a; --btn-ink:#ffffff;
+  --s0:#c2255c; --s1:#c9470f; --s2:#8f6500; --s3:#2b7a3a; --s4:#0b7285; --s5:#1864ab; --s6:#5f3dc4; --s7:#862e9c; --s8:#48525e;
+  --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible",Verdana,system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f1628; --surface:#1a2440; --ink:#eaeef7; --muted:#9daac4; --line:#2e3b5c; --btn:#eaeef7; --btn-ink:#0f1628; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0f1628; --surface:#1a2440; --ink:#eaeef7; --muted:#9daac4; --line:#2e3b5c; --btn:#eaeef7; --btn-ink:#0f1628; color-scheme:dark }
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 var(--body)}
+img{max-width:100%}
+[hidden]{display:none!important}
+#app{max-width:860px;margin:0 auto;padding-inline:16px;padding-block:24px 64px;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;line-height:1.1}
+h1{font-size:clamp(30px,6vw,44px);font-weight:800;letter-spacing:-.02em}
+h2{font-size:24px;font-weight:800}
+h3{font-size:13px;font-family:var(--body);font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+p{margin:0}
+.lead{color:var(--muted);max-width:60ch}
+.head{display:flex;flex-direction:column;gap:8px}
+.counts{display:flex;flex-wrap:wrap;gap:6px 18px;font-variant-numeric:tabular-nums;color:var(--muted)}
+.counts b{color:var(--ink);font-family:var(--display);font-size:20px;margin-right:4px}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.field{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 11px;min-width:0;flex:1 1 220px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:14px;font-weight:700}
+.chip small{font-weight:400;opacity:.75;margin-left:4px;font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"]{background:var(--btn);color:var(--btn-ink);border-color:var(--btn)}
+#list{display:flex;flex-direction:column;gap:28px}
+.lib{display:flex;flex-direction:column;gap:14px;content-visibility:auto;contain-intrinsic-size:auto 900px}
+.libhead{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px}
+.libhead span{color:var(--muted);font-variant-numeric:tabular-nums}
+.stack{display:flex;flex-direction:column;gap:6px}
+.c0{--sc:var(--s0)}.c1{--sc:var(--s1)}.c2{--sc:var(--s2)}.c3{--sc:var(--s3)}.c4{--sc:var(--s4)}.c5{--sc:var(--s5)}.c6{--sc:var(--s6)}.c7{--sc:var(--s7)}.c8{--sc:var(--s8)}
+.spines{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
+.spine{width:var(--w,100%);background:var(--sc);color:#fff;border-radius:4px 7px 7px 4px;padding:8px 12px 8px 14px;display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline;box-shadow:inset 5px 0 0 rgba(0,0,0,.22),inset 0 -2px 0 rgba(0,0,0,.14)}
+.num{font-family:var(--display);font-weight:800;background:rgba(255,255,255,.92);color:#15213a;border-radius:50%;min-width:24px;height:24px;display:inline-grid;place-items:center;font-size:14px;align-self:center;font-variant-numeric:tabular-nums}
+.t{font-weight:700;overflow-wrap:anywhere}
+.a{font-size:14px;opacity:.88}
+.covers{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(98px,22vw,128px),1fr));gap:18px 14px;align-items:start;grid-auto-flow:row dense}
+.cover{min-width:0}
+.cover>button{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:7px;width:100%}
+.cover>button:focus-visible{outline:3px solid var(--focus);outline-offset:3px;border-radius:6px}
+.art{position:relative;aspect-ratio:2/3;border-radius:3px 6px 6px 3px;overflow:hidden;background:var(--sc);box-shadow:0 2px 0 rgba(0,0,0,.18),0 6px 14px -6px rgba(0,0,0,.45);display:block}
+.art img{width:100%;height:100%;object-fit:cover;display:block}
+.art::after{content:"";position:absolute;inset:0 auto 0 0;width:6px;background:linear-gradient(90deg,rgba(0,0,0,.28),rgba(0,0,0,0))}
+.ph{position:absolute;inset:0;padding:12px 9px 9px 14px;color:#fff;font-family:var(--display);font-weight:800;font-size:14px;line-height:1.15;overflow:hidden;overflow-wrap:anywhere}
+.ph small{display:block;margin-top:6px;font-family:var(--body);font-weight:400;font-size:12px;opacity:.9}
+.cap{font-size:13px;line-height:1.25;font-weight:700;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.cover[aria-current="true"] .art{outline:3px solid var(--ink);outline-offset:2px}
+.detail{grid-column:1/-1;list-style:none}
+.picker{display:flex;flex-direction:column;gap:10px}
+.pick{display:flex;align-items:center;gap:8px;width:100%;max-width:420px;border:1.5px solid var(--btn);background:var(--surface);border-radius:12px;padding:10px 14px;font-size:16px;text-align:left}
+.pick span{color:var(--muted)}
+.pick b{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pick i{font-style:normal;transition:transform .15s}
+.pick[aria-expanded="true"] i{transform:rotate(180deg)}
+.panel{max-width:420px;border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px;box-shadow:0 10px 28px -14px rgba(0,0,0,.4)}
+.panel .field{flex:none;width:100%}
+.opts{list-style:none;margin:0;padding:0;max-height:min(55vh,420px);overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column}
+.opts button{all:unset;cursor:pointer;display:flex;justify-content:space-between;gap:10px;padding:10px 10px;border-radius:8px;font-weight:700}
+.opts button small{font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums}
+.opts button:hover,.opts button:focus-visible{background:var(--bg)}
+.opts button:focus-visible{outline:3px solid var(--focus);outline-offset:-3px}
+.opts button[aria-pressed="true"]{background:var(--btn);color:var(--btn-ink)}
+.opts button[aria-pressed="true"] small{color:inherit;opacity:.8}
+.opts .none{padding:10px;color:var(--muted)}
+.news{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.news>span{font-size:14px;color:var(--muted);margin-right:2px}
+.spine[data-open]{cursor:pointer}
+.card{background:var(--surface);border:1.5px solid var(--line);border-left:6px solid var(--sc);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.card .ct{font-size:16px;line-height:1.3}
+.card .meta{font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+.card .res{font-size:15px;line-height:1.5;max-width:65ch}
+.card .muted{color:var(--muted)}
+.spines .detail{margin-block:4px 8px}
+.empty{color:var(--muted);padding:26px 0;text-align:center}
+.who{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:flex-end;font-size:15px;min-height:34px}
+.who a{color:inherit;font-weight:700}
+.who .btnl{border:1.5px solid var(--btn);border-radius:999px;padding:5px 14px;text-decoration:none;background:var(--surface)}
+.who .badge{background:#c2255c;color:#fff;border-radius:999px;padding:1px 8px;font-size:13px;margin-left:4px;text-decoration:none}
+.ribbon{position:absolute;left:6px;right:6px;bottom:6px;background:rgba(21,33,58,.9);color:#fff;font-size:11px;font-weight:700;border-radius:4px;padding:3px 6px;text-align:center;line-height:1.2}
+.spine .st{font-size:12px;font-weight:700;background:rgba(0,0,0,.28);border-radius:4px;padding:1px 6px;margin-left:auto}
+.loan{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-top:4px}
+.loan .stt{font-size:14px;font-weight:700}
+.loan .stt.out{color:var(--s1)}
+.loan .stt.ok{color:var(--s3)}
+.lbtn{border:1.5px solid var(--btn);background:var(--btn);color:var(--btn-ink);border-radius:999px;padding:7px 16px;font-weight:700;font-size:15px;text-decoration:none;display:inline-block}
+.lbtn.sec{background:var(--surface);color:var(--ink)}
+.lbtn[disabled]{opacity:.55;cursor:wait}
+.lmsg{font-size:14px;color:var(--muted);flex-basis:100%}
+.lmsg.err{color:#c92a2a}
+@media (max-width:600px){ .spine{width:100%} }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="head">
+    <div class="who" id="who"></div>
+    <h1>Nuestra Estantería</h1>
+    <p class="lead">Los libros que tenemos entre todos. Mira qué hay en cada biblioteca y descubre tu próxima lectura.</p>
+    <p class="counts" id="counts"></p>
+  </header>
+  <div class="tools">
+    <input class="field" id="q" type="search" placeholder="Buscar título, autor o colección" aria-label="Buscar">
+    <div class="chips" role="group" aria-label="Vista">
+      <button class="chip" data-view="portadas" aria-pressed="true">Portadas</button>
+      <button class="chip" data-view="lista" aria-pressed="false">Lista</button>
+      <button class="chip" id="libres" aria-pressed="false" title="Ocultar los libros que están prestados">Solo en casa</button>
+    </div>
+  </div>
+  <div class="picker" id="libs">
+    <button class="pick" id="libbtn" aria-expanded="false" aria-controls="libpanel"><span>Biblioteca:</span><b id="libcur">Todas</b><i aria-hidden="true">▾</i></button>
+    <div class="panel" id="libpanel" hidden>
+      <input class="field" id="libq" type="search" placeholder="Buscar un nombre" aria-label="Buscar biblioteca" autocomplete="off">
+      <ul class="opts" id="libopts"></ul>
+    </div>
+    <div class="news" id="news"></div>
+  </div>
+  <div id="list"><p class="empty">Cargando la estantería…</p></div>
+</div>
+<script>
+(function(){
+"use strict";
+var D = { bibliotecas: [], libros: [] };
+var S = { q: "", lib: "", view: "portadas", open: null, libres: false };
+var YO = null, MSG = {};
+try { if (localStorage.getItem("vista") === "lista") S.view = "lista"; } catch(e){}
+var $ = function(id){ return document.getElementById(id); };
+
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+function hash(s){ var n = 0; for (var i = 0; i < s.length; i++) n = (n * 31 + s.charCodeAt(i)) >>> 0; return n; }
+function norm(s){ return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
+function shortTitle(t){ return t.replace(/^La increíble historia de\.\.\.\s*/, ""); }
+function libName(id){ for (var i = 0; i < D.bibliotecas.length; i++) if (D.bibliotecas[i].id === id) return D.bibliotecas[i].nombre; return ""; }
+function lib(id){ for (var i = 0; i < D.bibliotecas.length; i++) if (D.bibliotecas[i].id === id) return D.bibliotecas[i]; return {}; }
+function dm(iso){ if (!iso) return ""; var p = iso.split("-"); return parseInt(p[2], 10) + "/" + p[1]; }
+var HOY = new Date().toISOString().slice(0, 10);
+function vuelta(b){ return b.vuelve && b.vuelve >= HOY ? b.vuelve : ""; }   // si ya se ha pasado la fecha, no se muestra
+function color(b){ return "c" + (hash(b.coleccion || b.autor || b.titulo) % 9); }
+
+function filtered(){
+  var q = norm(S.q);
+  return D.libros.filter(function(b){
+    if (S.lib && b.biblioteca !== S.lib) return false;
+    if (q && b._s.indexOf(q) < 0) return false;
+    if (S.libres && b.prestado) return false;
+    return true;
+  });
+}
+
+function spine(b){
+  var open = S.open === b.id;
+  return '<li class="spine ' + color(b) + '" style="--w:' + (93 + hash(b.titulo) % 8) + '%" data-open="' + esc(b.id) + '" role="button" tabindex="0" aria-expanded="' + open + '">' +
+    (b.numero ? '<span class="num">' + esc(b.numero) + '</span>' : "") +
+    '<span class="t">' + esc(b.titulo) + '</span>' + (b.autor ? '<span class="a">' + esc(b.autor) + '</span>' : "") +
+    (b.prestado ? '<span class="st">Prestado' + (vuelta(b) ? ' · vuelve ' + dm(b.vuelve) : "") + '</span>' : "") + '</li>' +
+    (open && S.view === "lista" ? detail(b) : "");
+}
+
+function detail(b){
+  var meta = [];
+  if (b.paginas) meta.push(esc(b.paginas) + " páginas");
+  meta.push("Biblioteca de " + esc(libName(b.biblioteca)));
+  var res = RES ? (RES[b.id] || "") : null;
+  return '<li class="detail"><div class="card ' + color(b) + '">' +
+    '<p class="ct"><b>' + esc(b.titulo) + '</b>' + (b.autor ? ' · ' + esc(b.autor) : "") + '</p>' +
+    '<p class="meta">' + meta.join(" · ") + '</p>' +
+    (res === null ? '<p class="res muted">Cargando el resumen…</p>' : res ? '<p class="res">' + esc(res) + '</p>' : "") +
+    loanBox(b) + '</div></li>';
+}
+
+/* Préstamos: lo público no lleva nombres, solo si está en casa o prestado y hacia cuándo vuelve */
+function loanBox(b){
+  var L = lib(b.biblioteca), out = "", btn = "";
+  var estado = b.prestado ? '<span class="stt out">📖 Prestado' + (vuelta(b) ? ' · vuelve hacia el ' + dm(b.vuelve) : "") + '</span>'
+    : b.pedido ? '<span class="stt out">Pedido por una familia</span>'
+    : L.presta ? '<span class="stt ok">En casa</span>' : "";
+  if (!L.presta) estado = '<span class="stt">Biblioteca solo para mirar</span>' + (b.prestado ? " " + estado : "");
+  var mio = YO && YO.mios ? YO.mios[b.id] : null;
+  if (mio && !b.prestado) estado = '<span class="stt out">Pedido por vosotros</span>';
+  if (YO && YO.familia) {
+    if (YO.propias.indexOf(b.biblioteca) >= 0) btn = '<a class="lbtn sec" href="cuenta/">Es de vuestra biblioteca · Mi cuenta</a>';
+    else if (mio) btn = '<a class="lbtn sec" href="cuenta/">' + (mio === "activo" || mio === "devolucion" ? "Lo tenéis vosotros" : "Ya lo habéis pedido") + ' · Mi cuenta</a>';
+    else if (L.presta && !b.prestado && !b.pedido) btn = '<button class="lbtn" data-pedir="' + esc(b.id) + '">¿Me lo prestas?</button>';
+    else if (L.presta) {
+      var esp = YO.espera.indexOf(b.id) >= 0;
+      btn = '<button class="lbtn sec" data-esperar="' + esc(b.id) + '" aria-pressed="' + esp + '">' + (esp ? "🔔 Te avisaremos · quitar" : "🔔 Avísame cuando vuelva") + '</button>';
+    }
+  } else if (YO && L.presta && !b.prestado && !b.pedido) {
+    btn = '<a class="lbtn sec" href="cuenta/entrar">Entra con tu familia para pedirlo</a>';
+  }
+  var m = MSG[b.id];
+  out = estado + btn + (m ? '<span class="lmsg' + (m.err ? " err" : "") + '" role="status">' + esc(m.t) + '</span>' : "");
+  return out ? '<div class="loan">' + out + '</div>' : "";
+}
+
+function api(ruta, datos){
+  return fetch("cuenta/api/" + ruta, { method: "POST", credentials: "same-origin",
+    headers: { "Content-Type": "application/json", "X-CSRF": YO.csrf }, body: JSON.stringify(datos) })
+    .then(function(r){ return r.json().catch(function(){ return { ok: false, error: "Algo ha fallado. Recarga la página." }; }); })
+    .catch(function(){ return { ok: false, error: "Sin conexión. Prueba otra vez." }; });
+}
+function loanAction(el){
+  var id = el.getAttribute("data-pedir") || el.getAttribute("data-esperar");
+  var b = D.libros.filter(function(x){ return x.id === id; })[0]; if (!b) return;
+  el.disabled = true;
+  var p = el.hasAttribute("data-pedir") ? api("pedir", { libro: id })
+    : api("esperar", { libro: id, quitar: el.getAttribute("aria-pressed") === "true" });
+  p.then(function(j){
+    MSG[id] = { t: j.ok ? j.mensaje : j.error, err: !j.ok };
+    if (j.ok && el.hasAttribute("data-pedir")) { b.pedido = 1; YO.mios[id] = "solicitado"; }
+    if (j.ok && el.hasAttribute("data-esperar")) {
+      var i = YO.espera.indexOf(id);
+      if (i >= 0) YO.espera.splice(i, 1); else YO.espera.push(id);
+    }
+    renderList();
+    var f = document.querySelector('[data-open="' + id + '"]'); if (f) f.focus({ preventScroll: true });
+  });
+}
+
+function renderWho(){
+  var w = $("who");
+  if (!YO) { w.innerHTML = ""; return; }
+  w.innerHTML = YO.familia
+    ? '<span>Hola, <b>' + esc(YO.familia.nombre) + '</b></span><a class="btnl" href="cuenta/">Mi cuenta' + (YO.pendientes ? '<span class="badge" title="Cosas que os toca confirmar">' + YO.pendientes + '</span>' : "") + '</a>'
+    : '<a class="btnl" href="cuenta/entrar">Entrar · familias</a>';
+}
+
+var RES = null, resLoading = false;
+function loadRes(){
+  if (RES || resLoading) return;
+  resLoading = true;
+  fetch("resumenes.json", { cache: "no-cache" }).then(function(r){ return r.ok ? r.json() : {}; })
+    .catch(function(){ return {}; })
+    .then(function(j){ RES = j || {}; resLoading = false; if (S.open) renderList(); });
+}
+
+function cover(b){
+  var art = b.portada
+    ? '<img src="' + esc(b.portada) + '" alt="" width="180" height="270" loading="lazy" decoding="async">'
+    : '<span class="ph">' + esc(shortTitle(b.titulo)) + (b.autor ? '<small>' + esc(b.autor) + '</small>' : "") + '</span>';
+  var open = S.open === b.id;
+  var html = '<li class="cover ' + color(b) + '"' + (open ? ' aria-current="true"' : "") + '><button data-open="' + esc(b.id) + '" aria-expanded="' + open + '">' +
+    '<span class="art">' + art + (b.prestado ? '<span class="ribbon">Prestado' + (vuelta(b) ? " · " + dm(b.vuelve) : "") + '</span>' : "") + '</span><span class="cap">' + (b.numero ? esc(b.numero) + ". " : "") + esc(shortTitle(b.titulo)) + '</span></button></li>';
+  if (open) html += detail(b);
+  return html;
+}
+
+function renderList(){
+  var list = filtered(), out = "";
+  if (!D.libros.length) { $("list").innerHTML = '<p class="empty">Todavía no hay libros en la estantería.</p>'; return; }
+  if (!list.length) { $("list").innerHTML = '<p class="empty">Ningún libro coincide con la búsqueda.</p>'; return; }
+  D.bibliotecas.forEach(function(lib){
+    var mine = list.filter(function(b){ return b.biblioteca === lib.id; });
+    if (!mine.length) return;
+    var groups = {}, order = [];
+    mine.forEach(function(b){ var k = b.coleccion || "~"; if (!groups[k]) { groups[k] = []; order.push(k); } groups[k].push(b); });
+    order.sort(function(a, b){ return a === "~" ? 1 : b === "~" ? -1 : a.localeCompare(b, "es"); });
+    out += '<section class="lib"><div class="libhead"><h2>' + esc(lib.nombre) + '</h2><span>' + mine.length + (mine.length === 1 ? " libro" : " libros") + '</span></div>';
+    order.forEach(function(k){
+      var g = groups[k].slice().sort(function(a, b){
+        var na = parseInt(a.numero, 10), nb = parseInt(b.numero, 10);
+        if (!isNaN(na) && !isNaN(nb) && na !== nb) return na - nb;
+        return a.titulo.localeCompare(b.titulo, "es");
+      });
+      var grid = S.view === "portadas";
+      out += '<div class="stack"><h3>' + (k === "~" ? "Libros sueltos" : esc(k)) + '</h3>' +
+        (grid ? '<ul class="covers">' + g.map(cover).join("") + '</ul>' : '<ul class="spines">' + g.map(spine).join("") + '</ul>') + '</div>';
+    });
+    out += '</section>';
+  });
+  $("list").innerHTML = out;
+}
+
+function renderChrome(){
+  $("counts").innerHTML = '<span><b>' + D.libros.length + '</b>libros</span><span><b>' + D.bibliotecas.length + '</b>' + (D.bibliotecas.length === 1 ? "biblioteca" : "bibliotecas") + '</span>';
+  var n = {}; D.libros.forEach(function(b){ n[b.biblioteca] = (n[b.biblioteca] || 0) + 1; });
+  NUM = n;
+  $("libs").hidden = D.bibliotecas.length < 2;
+  $("libcur").textContent = S.lib ? libName(S.lib) : "Todas";
+  renderOpts();
+  var nuevas = D.bibliotecas.slice(-4).reverse();
+  $("news").innerHTML = D.bibliotecas.length > 6 ? '<span>Nuevas:</span>' + nuevas.map(function(l){ return '<button class="chip" data-lib="' + esc(l.id) + '" aria-pressed="' + (S.lib === l.id) + '">' + esc(l.nombre) + '</button>'; }).join("") : "";
+  [].forEach.call(document.querySelectorAll("[data-view]"), function(b){ b.setAttribute("aria-pressed", String(b.getAttribute("data-view") === S.view)); });
+}
+
+var NUM = {};
+function renderOpts(){
+  var q = norm($("libq").value);
+  var libs = D.bibliotecas.slice().sort(function(a, b){ return a.nombre.localeCompare(b.nombre, "es"); })
+    .filter(function(l){ return !q || norm(l.nombre).split(/[^a-z0-9ñ]+/).some(function(w){ return w.indexOf(q) === 0; }) || norm(l.nombre).indexOf(q) === 0; });
+  var html = q ? "" : '<li><button data-lib="" aria-pressed="' + (!S.lib) + '">Todas<small>' + D.libros.length + '</small></button></li>';
+  html += libs.map(function(l){ return '<li><button data-lib="' + esc(l.id) + '" aria-pressed="' + (S.lib === l.id) + '">' + esc(l.nombre) + '<small>' + (NUM[l.id] || 0) + '</small></button></li>'; }).join("");
+  $("libopts").innerHTML = html || '<li class="none">No hay ninguna biblioteca con ese nombre.</li>';
+}
+function openPanel(open){
+  $("libpanel").hidden = !open;
+  $("libbtn").setAttribute("aria-expanded", String(open));
+  if (open) { $("libq").value = ""; renderOpts(); $("libq").focus({ preventScroll: true }); }
+}
+$("libbtn").addEventListener("click", function(){ openPanel($("libpanel").hidden); });
+$("libq").addEventListener("input", renderOpts);
+$("libq").addEventListener("keydown", function(ev){
+  if (ev.key === "Enter") { var f = $("libopts").querySelector("button"); if (f) { ev.preventDefault(); f.click(); } }
+});
+document.addEventListener("keydown", function(ev){ if (ev.key === "Escape" && !$("libpanel").hidden) { openPanel(false); $("libbtn").focus(); } });
+document.addEventListener("click", function(ev){ if (!$("libpanel").hidden && !ev.target.closest("#libs")) openPanel(false); });
+
+document.addEventListener("click", function(ev){
+  var la = ev.target.closest("[data-pedir],[data-esperar]"); if (la) { loanAction(la); return; }
+  var el = ev.target.closest("[data-open],[data-lib],[data-view]"); if (!el) return;
+  if (el.hasAttribute("data-open")) { var id = el.getAttribute("data-open"); S.open = S.open === id ? null : id; if (S.open) loadRes(); renderList(); var f = document.querySelector('[data-open="' + id + '"]'); if (f) f.focus({ preventScroll: true }); return; }
+  if (el.hasAttribute("data-lib")) { S.lib = el.getAttribute("data-lib"); S.open = null; openPanel(false); renderChrome(); renderList(); window.scrollTo({ top: $("libs").offsetTop - 12, behavior: "smooth" }); return; }
+  if (el.hasAttribute("data-view")) { S.view = el.getAttribute("data-view"); S.open = null; try { localStorage.setItem("vista", S.view); } catch(e){} renderChrome(); renderList(); }
+});
+document.addEventListener("keydown", function(ev){
+  if ((ev.key === "Enter" || ev.key === " ") && ev.target.matches && ev.target.matches("li[data-open]")) { ev.preventDefault(); ev.target.click(); }
+});
+$("libres").addEventListener("click", function(){ S.libres = !S.libres; this.setAttribute("aria-pressed", String(S.libres)); S.open = null; renderList(); });
+var timer = 0;
+$("q").addEventListener("input", function(ev){ clearTimeout(timer); timer = setTimeout(function(){ S.q = ev.target.value; S.open = null; renderList(); }, 150); });
+
+fetch("libros.json", { cache: "no-cache" }).then(function(r){
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}).then(function(data){
+  D.bibliotecas = data.bibliotecas || [];
+  D.libros = (data.libros || []).map(function(b){
+    b._s = norm([b.titulo, b.autor, b.coleccion, libName(b.biblioteca)].join(" "));
+    return b;
+  });
+  renderChrome(); renderList();
+  return fetch("cuenta/api/yo", { credentials: "same-origin", cache: "no-store" }).then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(j){ if (j && j.ok) { YO = j; if (!YO.familia) { YO.mios = {}; YO.espera = []; YO.propias = []; } renderWho(); if (S.open) renderList(); } })
+    .catch(function(){});
+}).catch(function(){
+  $("list").innerHTML = '<p class="empty">No se ha podido cargar la lista de libros (libros.json). Comprueba que está en la misma carpeta que esta página.</p>';
+});
+})();
+</script>
+</body>
+</html>

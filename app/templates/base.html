@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>{% block titulo %}Administración{% endblock %} · Nuestra Estantería</title>
+<style>
+:root{
+  --bg:#edf0f5; --surface:#fff; --ink:#15213a; --muted:#566381; --line:#d3dae6; --focus:#ffd43b;
+  --btn:#15213a; --btn-ink:#fff; --ok:#2b7a3a; --warn:#a14d00; --danger:#b42318; --soft:#f5f7fa;
+  --body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f1628; --surface:#1a2440; --ink:#eaeef7; --muted:#9daac4; --line:#2e3b5c; --btn:#eaeef7; --btn-ink:#0f1628;
+  --ok:#69c27a; --warn:#f0a35a; --danger:#ff8a80; --soft:#141d33; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0f1628; --surface:#1a2440; --ink:#eaeef7; --muted:#9daac4; --line:#2e3b5c; --btn:#eaeef7; --btn-ink:#0f1628;
+  --ok:#69c27a; --warn:#f0a35a; --danger:#ff8a80; --soft:#141d33; color-scheme:dark }
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 var(--body)}
+a{color:inherit}
+h1,h2,h3{margin:0;line-height:1.15;text-wrap:balance}
+h1{font-size:clamp(24px,5vw,32px)} h2{font-size:20px} h3{font-size:16px}
+p{margin:0}
+.top{background:var(--surface);border-bottom:1.5px solid var(--line)}
+.top .in{max-width:980px;margin:0 auto;padding:10px 16px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.top b{font-size:17px;margin-right:auto}
+.top a{text-decoration:none;font-weight:700;padding:6px 2px;border-bottom:2.5px solid transparent}
+.top a[aria-current="page"]{border-color:var(--ink)}
+main{max-width:980px;margin:0 auto;padding:20px 16px 64px;display:flex;flex-direction:column;gap:18px}
+.muted{color:var(--muted)}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+label{display:flex;flex-direction:column;gap:4px;font-weight:700;font-size:14px;flex:1 1 200px;min-width:0}
+label.check{flex-direction:row;align-items:center;font-weight:400;flex:0 0 auto}
+input[type=text],input[type=password],input[type=url],input[type=number],select,textarea{font:inherit;color:inherit;background:var(--surface);border:1.5px solid var(--line);border-radius:9px;padding:8px 10px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:84px;line-height:1.45}
+::placeholder{color:var(--muted);opacity:.55;font-style:italic}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.btn{font:inherit;font-weight:700;border:1.5px solid var(--btn);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 16px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn.solid{background:var(--btn);color:var(--btn-ink)}
+.btn.danger{border-color:var(--danger);color:var(--danger)}
+.btn.small{padding:4px 11px;font-size:14px}
+.btn[disabled]{opacity:.5;cursor:wait}
+.flash{background:var(--surface);border-left:5px solid var(--warn);border-radius:8px;padding:10px 14px}
+table{border-collapse:collapse;width:100%}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+td.n{font-variant-numeric:tabular-nums;text-align:right}
+.thumb{width:44px;height:66px;object-fit:cover;border-radius:3px;background:var(--line);display:block}
+.thumb.ph{display:grid;place-items:center;font-size:11px;color:var(--muted)}
+.tag{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:1px 8px;color:var(--muted);white-space:nowrap}
+.tag.ok{color:var(--ok);border-color:var(--ok)}
+.tag.warn{color:var(--warn);border-color:var(--warn)}
+.tag.ia{color:#7048e8;border-color:#7048e8}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .tag.ia{color:#b197fc;border-color:#b197fc} }
+details summary{cursor:pointer;font-weight:700}
+.scroll{overflow-x:auto}
+@media (max-width:640px){ .hide-s{display:none} }
+{% block css %}{% endblock %}
+</style>
+</head>
+<body>
+{% block nav %}{% if session.admin %}
+<div class="top"><div class="in">
+  <b>📚 Nuestra Estantería</b>
+  <a href="{{ url_for('panel') }}" {% if request.endpoint in ('panel','biblioteca','libro','completar_pagina') %}aria-current="page"{% endif %}>Bibliotecas</a>
+  <a href="{{ url_for('nuevas') }}" {% if request.endpoint == 'nuevas' %}aria-current="page"{% endif %}>Nuevas entradas</a>
+  <a href="{{ url_for('colecciones') }}" {% if request.endpoint == 'colecciones' %}aria-current="page"{% endif %}>Colecciones</a>
+  <a href="{{ url_for('adminp.prestamos') }}" {% if request.endpoint == 'adminp.prestamos' %}aria-current="page"{% endif %}>Préstamos{% if g.get('disputas') %} <span class="tag warn">{{ g.disputas }}</span>{% endif %}</a>
+  <a href="{{ url_for('adminp.familias') }}" {% if request.endpoint in ('adminp.familias','adminp.familia') %}aria-current="page"{% endif %}>Familias</a>
+  <a href="/" target="_blank" rel="noopener">Ver estantería ↗</a>
+  <form method="post" action="{{ url_for('salir') }}" style="margin:0"><input type="hidden" name="csrf" value="{{ csrf() }}"><button class="btn small">Salir</button></form>
+</div></div>
+{% endif %}{% endblock %}
+<main>
+{% with mensajes = get_flashed_messages() %}{% for m in mensajes %}<p class="flash" role="status">{{ m }}</p>{% endfor %}{% endwith %}
+{% block cuerpo %}{% endblock %}
+</main>
+{% block js %}{% endblock %}
+</body>
+</html>

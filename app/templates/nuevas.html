@@ -1,0 +1,420 @@
+{% extends "base.html" %}
+{% block titulo %}Nuevas entradas{% endblock %}
+{% block css %}
+.paso{display:flex;gap:10px;align-items:baseline}
+.paso i{font-style:normal;font-weight:700;background:var(--btn);color:var(--btn-ink);border-radius:50%;min-width:26px;height:26px;display:inline-grid;place-items:center;font-size:14px}
+.res{display:flex;flex-direction:column;gap:14px}
+.item{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.item.skip{opacity:.55}
+.item header{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:baseline}
+.item header b{font-size:17px}
+.cands{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.cand{position:relative;border:1.5px solid var(--line);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:6px;cursor:pointer;background:var(--soft);font-size:13px;line-height:1.3}
+.cand input{position:absolute;opacity:0}
+.cand:has(input:checked){border-color:var(--ink);box-shadow:0 0 0 2px var(--ink)}
+.cand:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:2px}
+.cand img,.cand .noimg{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:4px;background:var(--line)}
+.cand .noimg{display:grid;place-items:center;color:var(--muted);font-size:12px;text-align:center;padding:6px}
+.cand b{font-size:14px;overflow-wrap:anywhere}
+.cand.otro{justify-content:center;text-align:center;font-weight:700;min-height:90px}
+.campos{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.campos .ancho{grid-column:1/-1}
+.desc{background:var(--soft);border-radius:8px;padding:10px;font-size:14px;max-height:180px;overflow:auto;white-space:pre-line}
+.estado{font-size:14px}
+.campos .nota{font-weight:400;font-size:13px;color:var(--muted)}
+.campos .nota.ia{color:var(--ok)}
+.barra{position:sticky;bottom:0;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;box-shadow:0 -8px 24px -18px rgba(0,0,0,.5)}
+{% endblock %}
+{% block cuerpo %}
+<h1>Nuevas entradas</h1>
+<div class="card">
+  <p class="paso"><i>1</i><b>¿De quién son los libros?</b></p>
+  <div class="row">
+    <label>Biblioteca
+      <select id="bib">
+        <option value="">— Elige una —</option>
+        {% for b in bibliotecas %}<option value="{{ b.id }}" {% if b.id == elegida %}selected{% endif %}>{{ b.nombre }}</option>{% endfor %}
+        <option value="__nueva">＋ Biblioteca nueva…</option>
+      </select></label>
+    <label id="nueva-w" hidden>Nombre de pila<input type="text" id="nueva" maxlength="60" placeholder="Por ejemplo: Ane"></label>
+  </div>
+  <p class="paso"><i>2</i><b>Escribe los libros, uno por línea, o léelos de una foto</b></p>
+  {% if ia_lista %}
+  <div class="row">
+    <label class="btn" for="foto" style="flex:0 0 auto;cursor:pointer">📷 Leer una foto de los lomos</label>
+    <input type="file" id="foto" accept="image/*" hidden>
+    <span class="estado muted" id="foto-estado" role="status"></span>
+  </div>
+  <div id="dudosos" class="flash" hidden></div>
+  {% else %}
+  <p class="muted" style="font-size:14px">Para leer fotos de lomos con IA, añade tu clave de Gemini (GEMINI_API_KEY) en /etc/estanteria/estanteria.env y reinicia el servicio.</p>
+  {% endif %}
+  <label style="font-weight:400">Puedes poner el autor después de una barra | o pegar directamente el ISBN.
+    <textarea id="lineas" rows="7" placeholder="Gigantosaurio | Jonny Duddle
+Las Ratitas 7 Cupcakes con sorpresa
+9788408221920"></textarea></label>
+  <div class="row"><button class="btn solid" id="buscar">Buscar datos</button><span class="estado muted" id="estado" role="status"></span></div>
+</div>
+<datalist id="colecciones">{% for c in colecciones %}<option value="{{ c }}">{% endfor %}</datalist>
+<div class="res" id="res"></div>
+<div class="barra" id="barra" hidden>
+  <span id="resumen-guardar"></span>
+  <button class="btn solid" id="guardar">Guardar en la estantería</button>
+</div>
+{% endblock %}
+{% block js %}
+<script>
+(function(){
+"use strict";
+var CSRF = {{ csrf()|tojson }};
+var $ = function(id){ return document.getElementById(id); };
+var items = [];
+var PISTAS = {};
+var IA = {{ ia_lista|tojson }};
+var COLECCIONES = {{ colecciones|tojson }};
+var TITULOS = {{ titulos|tojson }};   // títulos que ya hay en cada biblioteca, para avisar de repetidos
+
+// ¿Este libro ya está en la biblioteca elegida (o repetido en esta misma tanda)?
+function revisarRepetido(item){
+  if (!item.aviso) return;
+  var bib = $("bib").value, t = norm(item.f.titulo.value);
+  var msg = "";
+  if (t && item.elegido !== "no") {
+    if (TITULOS[bib] && TITULOS[bib].some(function(x){ return norm(x) === t; })) msg = "⚠️ Este libro ya está en esta biblioteca.";
+    else if (items.some(function(o){ return o !== item && o.f && o.elegido !== "no" && norm(o.f.titulo.value) === t && items.indexOf(o) < items.indexOf(item); }))
+      msg = "⚠️ Está repetido en esta lista.";
+  }
+  item.aviso.textContent = msg;
+  item.aviso.hidden = !msg;
+}
+function revisarRepetidos(){ items.forEach(revisarRepetido); }
+
+function verImagen(u){
+  return /^https:\/\/(web\.elkarbanaketa\.eus|static\.cegal\.es)\//.test(u) ? "{{ url_for('api_imagen') }}?u=" + encodeURIComponent(u) : u;
+}
+function norm(s){ return String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9ñ]+/g, " ").trim(); }
+
+// Devuelve el nombre de colección "oficial": el que ya existe en la estantería
+// o el primero que se ha escrito en esta tanda, para que no haya "Las Ratitas" y "las ratitas".
+function canonColeccion(nombre){
+  var n = norm(nombre);
+  if (!n) return String(nombre || "").trim();
+  var todas = COLECCIONES.concat(items.map(function(it){ return it.f ? it.f.coleccion.value : ""; }));
+  for (var i = 0; i < todas.length; i++) if (todas[i] && norm(todas[i]) === n) return todas[i];
+  return String(nombre).trim();
+}
+
+// "Las Ratitas 7. Cupcakes con sorpresa" -> {coleccion: "Las Ratitas", numero: "7", titulo: "Cupcakes con sorpresa"}
+function detectarColeccion(titulo){
+  var nt = norm(titulo);
+  var cols = COLECCIONES.filter(function(c){ return c !== "En euskera"; })
+                        .sort(function(a, b){ return b.length - a.length; });
+  for (var i = 0; i < cols.length; i++) {
+    var nc = norm(cols[i]);
+    if (!nc || (nt !== nc && nt.indexOf(nc + " ") !== 0)) continue;
+    for (var L = Math.max(1, cols[i].length - 3); L <= titulo.length && L <= cols[i].length + 4; L++) {
+      if (norm(titulo.slice(0, L)) === nc) {
+        var m = titulo.slice(L).match(/^\s*(?:n[ºo°.]*\s*)?(\d{1,3})?\s*[-–—.:,]?\s*(.*)$/i);
+        return { coleccion: cols[i], numero: (m && m[1]) || "", titulo: (m && m[2] && m[2].trim()) || titulo };
+      }
+    }
+  }
+  return null;
+}
+
+var fotoInput = $("foto");
+if (fotoInput) fotoInput.addEventListener("change", async function(){
+  var archivo = this.files && this.files[0];
+  if (!archivo) return;
+  var estado = $("foto-estado");
+  estado.textContent = "Leyendo la foto con Gemini… suele tardar menos de un minuto, pero si está saturado puede tardar un par.";
+  var datos = new FormData(); datos.append("foto", archivo);
+  try {
+    var r = await fetch("{{ url_for('api_foto') }}", { method: "POST", body: datos, credentials: "same-origin", headers: { "X-CSRF": CSRF } });
+    var j = await r.json();
+    if (!j.ok) throw new Error(j.error || "Error");
+    var actuales = $("lineas").value.split("\n").map(function(s){ return s.trim(); }).filter(Boolean);
+    var nuevas = [], dudas = [];
+    j.libros.forEach(function(l){
+      var linea = l.titulo + (l.autor ? " | " + l.autor : "");
+      if (actuales.indexOf(linea) >= 0 || nuevas.indexOf(linea) >= 0) return;
+      nuevas.push(linea);
+      PISTAS[linea] = { coleccion: l.coleccion, numero: l.numero };
+      if (!l.seguro) dudas.push(linea);
+    });
+    $("lineas").value = actuales.concat(nuevas).join("\n");
+    estado.textContent = "Gemini ha leído " + j.libros.length + " libros (" + nuevas.length + " nuevos en la lista). Revisa la lista y pulsa «Buscar datos».";
+    var box = $("dudosos");
+    box.hidden = !dudas.length;
+    box.textContent = "";
+    if (dudas.length) {
+      box.appendChild(el("b", { text: "Revisa estos, la foto no se leía bien: " }));
+      box.appendChild(document.createTextNode(dudas.join(" · ")));
+    }
+  } catch (e) {
+    estado.textContent = "No se ha podido leer la foto: " + e.message;
+  }
+  this.value = "";
+});
+
+function el(tag, attrs, kids){
+  var e = document.createElement(tag);
+  for (var k in (attrs || {})) {
+    if (k === "text") e.textContent = attrs[k];
+    else if (k === "on") for (var ev in attrs.on) e.addEventListener(ev, attrs.on[ev]);
+    else if (attrs[k] !== false && attrs[k] != null) e.setAttribute(k, attrs[k] === true ? "" : attrs[k]);
+  }
+  (kids || []).forEach(function(c){ if (c) e.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+  return e;
+}
+
+$("bib").addEventListener("change", function(){
+  $("nueva-w").hidden = this.value !== "__nueva";
+  if (this.value === "__nueva") $("nueva").focus();
+  revisarRepetidos();
+  actualizarBarra();
+});
+
+$("buscar").addEventListener("click", async function(){
+  var lineas = $("lineas").value.split("\n").map(function(s){ return s.trim(); }).filter(Boolean).slice(0, 60);
+  if (!lineas.length) { $("lineas").focus(); return; }
+  this.disabled = true;
+  $("res").textContent = ""; items = [];
+  for (var i = 0; i < lineas.length; i++) {
+    $("estado").textContent = "Buscando " + (i + 1) + " de " + lineas.length + "…";
+    var item = { linea: lineas[i], datos: null, elegido: 0 };
+    items.push(item);
+    try {
+      var r = await fetch("{{ url_for('api_buscar') }}?q=" + encodeURIComponent(lineas[i]), { credentials: "same-origin" });
+      if (r.status === 302 || r.redirected) { location.href = "{{ url_for('login') }}"; return; }
+      item.datos = await r.json();
+    } catch (e) {
+      item.datos = { candidatos: [], errores: ["sin conexión"], consulta: { titulo: lineas[i], autor: "" } };
+    }
+    pintar(item, i);
+  }
+  $("estado").textContent = "Listo. Revisa cada libro antes de guardar.";
+  this.disabled = false;
+  actualizarBarra();
+  if (IA) {
+    $("estado").textContent = "Listo. Gemini está escribiendo los resúmenes; mientras, revisa cada libro.";
+    await pedirResumenes(items);
+    $("estado").textContent = "Listo. Revisa cada libro (y su resumen) antes de guardar.";
+  }
+});
+
+function pintar(item, idx){
+  var d = item.datos, c = d.candidatos || [];
+  var nombre = "c" + idx;
+  var box = el("section", { class: "item", "aria-label": "Libro " + (idx + 1) });
+  item.box = box;
+  box.appendChild(el("header", {}, [
+    el("b", { text: (idx + 1) + ". " + item.linea }),
+    el("span", { class: "muted", text: c.length ? c.length + " resultados — elige el que coincide con el libro" : "No se ha encontrado nada" + (d.errores && d.errores.length ? " (" + d.errores.join(", ") + ")" : "") })
+  ]));
+  var grid = el("div", { class: "cands", role: "radiogroup" });
+  c.forEach(function(k, j){
+    grid.appendChild(el("label", { class: "cand" }, [
+      el("input", { type: "radio", name: nombre, value: j, checked: j === 0, on: { change: function(){ elegir(item, j); } } }),
+      k.portada_url ? el("img", { src: verImagen(k.portada_url), alt: "", loading: "lazy", referrerpolicy: "no-referrer", on: { error: function(){ this.replaceWith(el("span", { class: "noimg", text: "sin portada" })); } } }) : el("span", { class: "noimg", text: "sin portada" }),
+      el("b", { text: k.titulo }),
+      el("span", { text: k.autor || "" }),
+      el("span", { class: "muted", text: [k.editorial, k.anio, k.paginas ? k.paginas + " pág." : "", (k.idioma || "").toUpperCase()].filter(Boolean).join(" · ") }),
+      el("span", { class: "tag", text: k.fuente })
+    ]));
+  });
+  grid.appendChild(el("label", { class: "cand otro" }, [
+    el("input", { type: "radio", name: nombre, value: "manual", checked: !c.length, on: { change: function(){ elegir(item, "manual"); } } }),
+    el("span", { text: "Ninguno coincide: lo relleno yo" })
+  ]));
+  grid.appendChild(el("label", { class: "cand otro" }, [
+    el("input", { type: "radio", name: nombre, value: "no", on: { change: function(){ elegir(item, "no"); } } }),
+    el("span", { text: "No añadir este libro" })
+  ]));
+  item.aviso = el("p", { class: "flash", hidden: true });
+  box.appendChild(item.aviso);
+  box.appendChild(grid);
+
+  var f = {};
+  function campo(key, label, attrs, ancho){
+    var input = key === "resumen" ? el("textarea", Object.assign({ rows: 3, maxlength: 600 }, attrs || {}))
+                                  : el("input", Object.assign({ type: "text" }, attrs || {}));
+    f[key] = input;
+    return el("label", { class: ancho ? "ancho" : null }, [label, input]);
+  }
+  var campos = el("div", { class: "campos" }, [
+    campo("titulo", "Título", { maxlength: 200 }, true),
+    campo("autor", "Autor", { maxlength: 150 }),
+    campo("coleccion", "Colección", { maxlength: 100, placeholder: "En euskera, Las Ratitas…", list: "colecciones" }),
+    campo("numero", "Número", { maxlength: 6 }),
+    campo("paginas", "Páginas", { maxlength: 5, inputmode: "numeric" }),
+    campo("isbn", "ISBN", { maxlength: 17 }),
+    campo("resumen", "Resumen para niños (2-3 líneas). Déjalo vacío si no hay uno fiable.", {}, true)
+  ]);
+  item.notaResumen = el("span", { class: "nota ancho" });
+  campos.appendChild(item.notaResumen);
+  item.resumenes = {};
+  f.resumen.addEventListener("input", function(){ item.editado = true; item.notaResumen.textContent = ""; });
+  f.coleccion.addEventListener("change", function(){ this.value = canonColeccion(this.value); });
+  f.coleccion.addEventListener("input", function(){ item.colEditada = true; });
+  f.titulo.addEventListener("change", revisarRepetidos);
+  f.numero.addEventListener("input", function(){ item.colEditada = true; });
+  item.f = f;
+  item.campos = campos;
+  item.descBox = el("details", {}, [el("summary", { text: "Descripción de la editorial (solo como referencia)" })]);
+  box.appendChild(campos);
+  box.appendChild(item.descBox);
+  $("res").appendChild(box);
+  item.pendiente = true;              // el resumen se pide en lote al terminar la búsqueda
+  elegir(item, c.length ? 0 : "manual");
+  item.pendiente = false;
+}
+
+function elegir(item, j){
+  item.elegido = j;
+  item.box.classList.toggle("skip", j === "no");
+  item.campos.hidden = j === "no";
+  item.descBox.hidden = true;
+  var q = item.datos.consulta || {};
+  var k = typeof j === "number" ? item.datos.candidatos[j] : null;
+  var f = item.f;
+  if (j === "manual") {
+    f.titulo.value = q.isbn ? "" : (q.titulo || item.linea); f.autor.value = q.autor || "";
+    f.paginas.value = ""; f.isbn.value = q.isbn || ""; item.portada = "";
+  } else if (k) {
+    f.titulo.value = k.titulo || ""; f.autor.value = k.autor || "";
+    f.paginas.value = k.paginas || ""; f.isbn.value = k.isbn || ""; item.portada = k.portada_url || "";
+    item.fuente = k.fuente;
+    var det = item.descBox;
+    while (det.childNodes.length > 1) det.removeChild(det.lastChild);
+    if (k.descripcion) {
+      det.hidden = false;
+      det.appendChild(el("p", { class: "desc", text: k.descripcion }));
+      det.appendChild(el("p", {}, [el("button", { type: "button", class: "btn small", text: "Copiar al resumen para adaptarlo",
+        on: { click: function(){ f.resumen.value = k.descripcion.slice(0, 600); item.editado = true; item.notaResumen.textContent = ""; f.resumen.focus(); } } })]));
+      det.appendChild(el("p", { class: "muted", text: "Recórtalo a 2-3 líneas con tono infantil y quita lo que no sea adecuado." }));
+    }
+  }
+  // Colección y número: lo que dijo la foto, o lo que se detecta en el título (salvo que los hayas cambiado tú).
+  var detectado = detectarColeccion(f.titulo.value);
+  if (detectado) f.titulo.value = detectado.titulo;
+  if (j !== "no" && !item.colEditada) {
+    var pista = PISTAS[item.linea] || {};
+    if (pista.coleccion) {
+      f.coleccion.value = canonColeccion(pista.coleccion);
+      f.numero.value = pista.numero || (k && k.numero) || (detectado && detectado.numero) || "";
+    } else if (k && k.coleccion) {
+      f.coleccion.value = canonColeccion(k.coleccion); f.numero.value = k.numero || "";
+    } else {
+      f.coleccion.value = detectado ? detectado.coleccion : ""; f.numero.value = detectado ? detectado.numero : "";
+    }
+  }
+  ponerResumen(item);
+  revisarRepetidos();
+  actualizarBarra();
+}
+
+// ---------- Resúmenes automáticos con Gemini ----------
+function claveResumen(item){ return typeof item.elegido === "number" ? String(item.elegido) : ""; }
+
+function ponerResumen(item){
+  if (!IA || item.editado) return;
+  var k = typeof item.elegido === "number" ? item.datos.candidatos[item.elegido] : null;
+  var clave = claveResumen(item);
+  if (!k || !k.descripcion) {
+    item.f.resumen.value = ""; item.f.resumen.placeholder = "";
+    item.notaResumen.textContent = k ? "No hay descripción de la editorial: escríbelo tú o déjalo vacío." : "";
+    item.notaResumen.className = "nota ancho";
+    return;
+  }
+  if (clave in item.resumenes) { mostrarResumen(item, item.resumenes[clave]); return; }
+  if (item.pendiente) return;               // se pedirá en el lote general
+  pedirResumenes([item]);
+}
+
+function mostrarResumen(item, texto){
+  if (item.editado) return;
+  item.f.resumen.value = texto || "";
+  item.f.resumen.placeholder = "";
+  item.notaResumen.className = texto ? "nota ancho ia" : "nota ancho";
+  item.notaResumen.textContent = texto ? "✨ Resumen escrito por Gemini a partir de la editorial: revísalo antes de guardar."
+                                       : "La descripción de la editorial no servía para un resumen fiable: se deja vacío.";
+}
+
+async function pedirResumenes(lista){
+  lista = lista.filter(function(it){ return !it.editado && typeof it.elegido === "number" && (it.datos.candidatos[it.elegido] || {}).descripcion; });
+  for (var i = 0; i < lista.length; i += 20) {
+    var lote = lista.slice(i, i + 20);
+    var pedidos = lote.map(function(it){
+      it.pendiente = true;
+      it.f.resumen.placeholder = "Escribiendo el resumen con Gemini…";
+      var k = it.datos.candidatos[it.elegido];
+      return { id: items.indexOf(it) + "-" + claveResumen(it), titulo: k.titulo, descripcion: k.descripcion, item: it, clave: claveResumen(it) };
+    });
+    try {
+      var r = await fetch("{{ url_for('api_resumir') }}", {
+        method: "POST", credentials: "same-origin",
+        headers: { "Content-Type": "application/json", "X-CSRF": CSRF },
+        body: JSON.stringify({ libros: pedidos.map(function(p){ return { id: p.id, titulo: p.titulo, descripcion: p.descripcion }; }) })
+      });
+      var j = await r.json();
+      if (!j.ok) throw new Error(j.error || "Error");
+      pedidos.forEach(function(p){
+        var texto = j.resumenes[p.id] || "";
+        p.item.resumenes[p.clave] = texto;
+        p.item.pendiente = false;
+        if (claveResumen(p.item) === p.clave) mostrarResumen(p.item, texto);
+      });
+    } catch (e) {
+      pedidos.forEach(function(p){
+        p.item.pendiente = false;
+        p.item.f.resumen.placeholder = "";
+        p.item.notaResumen.className = "nota ancho";
+        p.item.notaResumen.textContent = "No se ha podido escribir el resumen (" + e.message + "). Puedes usar la descripción de la editorial de abajo.";
+      });
+    }
+  }
+}
+
+function aGuardar(){
+  return items.filter(function(it){ return it.f && it.elegido !== "no" && it.f.titulo.value.trim(); });
+}
+
+function actualizarBarra(){
+  var n = aGuardar().length;
+  $("barra").hidden = !items.length;
+  var sel = $("bib"), nombre = sel.value === "__nueva" ? ($("nueva").value.trim() || "la biblioteca nueva") : (sel.value ? sel.options[sel.selectedIndex].text : "");
+  $("resumen-guardar").textContent = n + (n === 1 ? " libro" : " libros") + (nombre ? " para " + nombre : " — elige arriba la biblioteca");
+  $("guardar").disabled = !n || !sel.value;
+}
+$("nueva").addEventListener("input", actualizarBarra);
+
+$("guardar").addEventListener("click", async function(){
+  var sel = $("bib");
+  if (sel.value === "__nueva" && !$("nueva").value.trim()) { $("nueva").focus(); return; }
+  var libros = aGuardar().map(function(it){
+    var f = it.f;
+    return { titulo: f.titulo.value, autor: f.autor.value, coleccion: f.coleccion.value, numero: f.numero.value,
+             paginas: f.paginas.value, isbn: f.isbn.value, resumen: f.resumen.value,
+             portada_url: it.elegido === "manual" ? "" : (it.portada || ""), fuente: it.elegido === "manual" ? "manual" : (it.fuente || ""),
+             resumen_origen: (!it.editado && f.resumen.value && Object.values(it.resumenes || {}).indexOf(f.resumen.value) >= 0) ? "ia" : "" };
+  });
+  this.disabled = true; this.textContent = "Guardando y descargando portadas…";
+  try {
+    var r = await fetch("{{ url_for('api_guardar') }}", {
+      method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json", "X-CSRF": CSRF },
+      body: JSON.stringify({ biblioteca_id: sel.value === "__nueva" ? "" : sel.value,
+                             biblioteca_nueva: sel.value === "__nueva" ? $("nueva").value : "", libros: libros })
+    });
+    var j = await r.json();
+    if (!j.ok) throw new Error(j.error || "Error");
+    location.href = j.url;
+  } catch (e) {
+    $("resumen-guardar").textContent = "No se ha podido guardar: " + e.message;
+    this.disabled = false; this.textContent = "Guardar en la estantería";
+  }
+});
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,13 @@
+<table>
+  <thead><tr><th>Libro</th><th>Dueña</th><th>Lo tiene</th><th>Estado</th><th class="hide-s">Vuelve</th><th></th></tr></thead>
+  <tbody>
+  {% for p in prestamos %}
+    <tr><td><b>{{ p.titulo }}</b></td><td>{{ p.duena }}</td><td>{{ p.prestataria }}</td>
+      <td><span class="tag {% if p.estado == 'disputa' %}warn{% elif p.estado == 'activo' %}ok{% endif %}">{{ P.NOMBRES_ESTADO[p.estado] }}</span></td>
+      <td class="hide-s">{% if p.estado in ('activo','devolucion') %}{{ fecha_bonita(p.vence) }}{% elif p.fin %}<span class="muted">{{ fecha_bonita(p.fin) }}</span>{% endif %}</td>
+      <td><a class="btn small" href="{{ url_for('adminp.prestamo', pid=p.id) }}">Ver</a></td></tr>
+  {% else %}
+    <tr><td colspan="6" class="muted">Ninguno.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block titulo %}Entrar{% endblock %}
+{% block cuerpo %}
+<form class="card" method="post" style="max-width:380px;margin:12vh auto 0;width:100%">
+  <h1>Nuestra Estantería</h1>
+  <p class="muted">Zona de administración. Las familias no necesitan entrar aquí.</p>
+  <label>Contraseña<input type="password" name="clave" autocomplete="current-password" required autofocus></label>
+  <button class="btn solid">Entrar</button>
+</form>
+{% endblock %}

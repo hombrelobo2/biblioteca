@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block titulo %}Aviso{% endblock %}
+{% block cuerpo %}
+<div class="card">
+  <h1>{% if e.code == 404 %}No encontrado{% elif e.code == 429 %}Espera un poco{% else %}Algo no ha ido bien{% endif %}</h1>
+  <p>{{ e.description }}</p>
+  <p><a class="btn" href="{{ url_for('panel') if request.path.startswith('/admin') else '/' }}">Volver</a></p>
+</div>
+{% endblock %}

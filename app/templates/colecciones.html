@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block titulo %}Colecciones{% endblock %}
+{% block cuerpo %}
+<p><a href="{{ url_for('panel') }}">← Volver</a></p>
+<h1>Colecciones</h1>
+<p class="muted">Los libros de la misma colección salen juntos en la estantería solo si el nombre está escrito exactamente igual. Aquí puedes unificar nombres o corregirlos en todos los libros a la vez.</p>
+
+{% if repetidas %}
+<div class="card">
+  <h2>Escritas de varias maneras</h2>
+  {% for g in repetidas %}
+  <form method="post" action="{{ url_for('colecciones_renombrar') }}" class="row" style="border-top:1px solid var(--line);padding-top:10px">
+    <span style="flex:1 1 260px">{% for f in g %}«{{ f.coleccion }}» <span class="muted">({{ f.n }})</span>{% if not loop.last %} · {% endif %}<input type="hidden" name="de" value="{{ f.coleccion }}">{% endfor %}</span>
+    <label style="flex:1 1 200px">Dejar todas como<input type="text" name="a" value="{{ g[0].coleccion }}" maxlength="100" required></label>
+    <button class="btn solid" style="align-self:flex-end">Unificar</button>
+    <input type="hidden" name="csrf" value="{{ csrf() }}">
+  </form>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="card scroll">
+  <h2>Todas las colecciones</h2>
+  <table>
+    <thead><tr><th>Colección</th><th class="n">Libros</th><th class="n hide-s">Bibliotecas</th><th class="n hide-s">Sin número</th><th>Cambiar nombre</th></tr></thead>
+    <tbody>
+    {% for f in colecciones %}
+      <tr>
+        <td><b>{{ f.coleccion }}</b></td><td class="n">{{ f.n }}</td><td class="n hide-s">{{ f.bibs }}</td>
+        <td class="n hide-s">{% if f.coleccion != 'En euskera' and f.sin_numero %}{{ f.sin_numero }}{% endif %}</td>
+        <td><form method="post" action="{{ url_for('colecciones_renombrar') }}" class="row" style="flex-wrap:nowrap">
+          <input type="hidden" name="de" value="{{ f.coleccion }}"><input type="hidden" name="csrf" value="{{ csrf() }}">
+          <input type="text" name="a" value="{{ f.coleccion }}" maxlength="100" aria-label="Nuevo nombre para {{ f.coleccion }}" style="min-width:140px">
+          <button class="btn small">Guardar</button></form></td>
+      </tr>
+    {% else %}
+      <tr><td colspan="5" class="muted">Todavía no hay colecciones.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="muted" style="font-size:14px">Si cambias el nombre por el de otra colección que ya existe, las dos se juntan. Para poner los números que faltan, usa «✨ Completar datos que faltan».</p>
+</div>
+{% endblock %}

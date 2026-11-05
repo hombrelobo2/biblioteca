@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block titulo %}{{ l.titulo }}{% endblock %}
+{% block cuerpo %}
+<p><a href="{{ url_for('biblioteca', bid=l.biblioteca_id) }}">← Volver a la biblioteca</a></p>
+<form class="card" method="post" enctype="multipart/form-data">
+  <h1>{{ l.titulo }}</h1>
+  <div class="row" style="align-items:flex-start;gap:16px">
+    {% if l.portada %}<img src="/portadas/{{ l.portada }}" alt="Portada actual" style="width:120px;border-radius:4px">{% else %}<span class="thumb ph" style="width:120px;height:180px">sin portada</span>{% endif %}
+    <div style="flex:1 1 280px;display:flex;flex-direction:column;gap:10px">
+      <label>Título<input type="text" name="titulo" value="{{ l.titulo }}" maxlength="200" required></label>
+      <label>Autor<input type="text" name="autor" value="{{ l.autor }}" maxlength="150"></label>
+      <div class="row">
+        <label>Colección<input type="text" name="coleccion" value="{{ l.coleccion }}" maxlength="100" placeholder="En euskera, Las Ratitas…"></label>
+        <label style="flex:0 1 90px">Número<input type="text" name="numero" value="{{ l.numero }}" maxlength="6"></label>
+        <label style="flex:0 1 100px">Páginas<input type="text" name="paginas" value="{{ l.paginas }}" inputmode="numeric" maxlength="5"></label>
+      </div>
+      <div class="row">
+        <label>ISBN<input type="text" name="isbn" value="{{ l.isbn }}" maxlength="17"></label>
+        <label>Biblioteca<select name="biblioteca_id">{% for b in bibliotecas %}<option value="{{ b.id }}" {% if b.id == l.biblioteca_id %}selected{% endif %}>{{ b.nombre }}</option>{% endfor %}</select></label>
+      </div>
+    </div>
+  </div>
+  <label>Resumen para niños (2-3 líneas)
+    <textarea name="resumen" maxlength="600" rows="4">{{ l.resumen }}</textarea></label>
+  {% if l.resumen_origen == 'ia' %}<label class="check" style="font-weight:700"><input type="checkbox" name="revisado" value="1"> ✨ Este resumen lo escribió Gemini: lo he revisado y está bien</label>{% endif %}
+  <p class="muted" style="font-size:14px">Tono infantil, sin comentarios sexistas, discriminatorios ni palabras malsonantes. Si no hay un resumen fiable, déjalo vacío.</p>
+  <details>
+    <summary>Cambiar la portada</summary>
+    <div class="row" style="margin-top:10px">
+      <label>Subir una imagen<input type="file" name="portada_archivo" accept="image/*"></label>
+      <label>…o pegar la dirección de una imagen<input type="url" name="portada_url" placeholder="https://…"></label>
+      {% if l.portada %}<label class="check"><input type="checkbox" name="quitar_portada" value="1"> Quitar la portada</label>{% endif %}
+    </div>
+  </details>
+  <label class="check"><input type="checkbox" name="perdido" value="1" {% if l.perdido %}checked{% endif %}> 📕 Libro perdido (no se muestra en la estantería ni se puede pedir)</label>
+  <div class="row"><button class="btn solid">Guardar</button><a class="btn" href="{{ url_for('biblioteca', bid=l.biblioteca_id) }}">Cancelar</a></div>
+  <input type="hidden" name="csrf" value="{{ csrf() }}">
+</form>
+<form method="post" action="{{ url_for('libro_borrar', lid=l.id) }}" onsubmit="return confirm('¿Borrar este libro de la estantería?')">
+  <input type="hidden" name="csrf" value="{{ csrf() }}">
+  <button class="btn danger small">Borrar este libro</button>
+</form>
+{% endblock %}

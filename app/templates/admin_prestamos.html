@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block titulo %}Préstamos{% endblock %}
+{% block css %}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px}
+.stat b{display:block;font-size:28px;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:14px}
+.stat.warn b{color:var(--danger)}
+{% endblock %}
+{% block cuerpo %}
+<h1>Préstamos</h1>
+<div class="stats">
+  <div class="stat"><b>{{ stats.activos }}</b><span>fuera de casa</span></div>
+  <div class="stat {% if stats.vencidos %}warn{% endif %}"><b>{{ stats.vencidos }}</b><span>con retraso</span></div>
+  <div class="stat"><b>{{ stats.pedidos }}</b><span>pedidos en marcha</span></div>
+  <div class="stat"><b>{{ stats.devueltos }}</b><span>devueltos en total</span></div>
+  <div class="stat"><b>{{ stats.perdidos }}</b><span>perdidos</span></div>
+</div>
+
+{% if grupos.disputa %}
+<div class="card scroll" style="border-color:var(--warn);border-width:2px">
+  <h2>⚠️ Desacuerdos para resolver</h2>
+  <p class="muted">Una familia dice una cosa y la otra no la confirma. Habla con ellas y decide en «Ver».</p>
+  {% with prestamos = grupos.disputa %}{% include "_tabla_prestamos.html" %}{% endwith %}
+</div>
+{% endif %}
+{% if grupos.vencidos %}
+<div class="card scroll">
+  <h2>Con retraso</h2>
+  {% with prestamos = grupos.vencidos %}{% include "_tabla_prestamos.html" %}{% endwith %}
+</div>
+{% endif %}
+<div class="card scroll">
+  <h2>Fuera de casa</h2>
+  {% with prestamos = grupos.fuera %}{% include "_tabla_prestamos.html" %}{% endwith %}
+</div>
+<div class="card scroll">
+  <h2>Pedidos en marcha</h2>
+  {% with prestamos = grupos.pedidos %}{% include "_tabla_prestamos.html" %}{% endwith %}
+</div>
+{% if mas %}
+<div class="card">
+  <h2>Los más prestados</h2>
+  <ol style="margin:0;padding-left:22px">{% for m in mas %}<li>{{ m.titulo }} <span class="muted">· {{ m.n }}</span></li>{% endfor %}</ol>
+</div>
+{% endif %}
+<div class="card scroll">
+  <details><summary>Historial (últimos {{ cerrados|length }})</summary>
+  <div style="margin-top:10px">{% with prestamos = cerrados %}{% include "_tabla_prestamos.html" %}{% endwith %}</div>
+  </details>
+</div>
+{% endblock %}

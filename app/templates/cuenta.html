@@ -1,0 +1,193 @@
+{% extends "cuenta_base.html" %}
+{% block titulo %}Mi cuenta{% endblock %}
+{% block css %}
+.loan{display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:start;padding:16px 0;border-top:1px solid var(--line);scroll-margin-top:16px}
+.loan:first-of-type{border-top:0;padding-top:4px}
+.loan .thumb{width:120px;height:180px;border-radius:3px 7px 7px 3px;box-shadow:0 2px 0 rgba(0,0,0,.15),0 8px 18px -8px rgba(0,0,0,.5)}
+.loan .thumb.ph{display:flex;align-items:flex-start;padding:12px 10px;background:var(--btn);color:var(--btn-ink);font-weight:700;font-size:14px;line-height:1.2;overflow:hidden;overflow-wrap:anywhere}
+.loan .info b{font-size:18px;line-height:1.25}
+.loan .tag{white-space:normal;display:inline-block}
+.loan.toca{background:var(--soft);border:2px solid var(--warn);border-radius:12px;padding:14px;margin-block:6px}
+.loan.toca + .loan{border-top:0}
+.tag.toca{background:var(--warn);color:var(--surface);border-color:var(--warn);font-weight:700}
+.resumen{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.resumen a{font-weight:700}
+@media (max-width:520px){ .loan{grid-template-columns:88px 1fr;gap:12px} .loan .thumb{width:88px;height:132px} .loan .info b{font-size:17px} }
+.loan .info{display:flex;flex-direction:column;gap:6px;min-width:0}
+.loan .info b{overflow-wrap:anywhere}
+.state{font-size:14px}
+.due{font-weight:700;font-variant-numeric:tabular-nums}
+.due.late{color:var(--danger)} .due.soon{color:var(--warn)}
+.acts{display:flex;flex-wrap:wrap;gap:8px}
+.acts form{margin:0}
+.serio{font-size:14px} .serio summary{font-weight:400;color:var(--muted)}
+.serio form{display:flex;flex-direction:column;gap:8px;margin-top:8px;max-width:420px}
+.serio textarea{min-height:60px}
+.hola{display:flex;flex-direction:column;gap:6px}
+.count{font-size:14px;color:var(--muted);font-weight:400}
+.toca{border-color:var(--warn);border-width:2px}
+.empty{color:var(--muted)}
+.lib-row{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--line)}
+.lib-row:first-of-type{border-top:0}
+{% endblock %}
+{% macro tarjeta(it) %}{% set p = it.p %}
+<div class="loan{% if it.toca %} toca{% endif %}" id="p-{{ p.id }}">
+  {% if p.portada %}<img class="thumb" src="/portadas/{{ p.portada }}" alt="" loading="lazy">{% else %}<span class="thumb ph">{{ p.titulo }}</span>{% endif %}
+  <div class="info">
+    <b>{{ p.titulo }}</b>
+    <span class="muted state">
+      {% if it.rol == 'duena' %}{% if p.estado in ('solicitado','aceptado') %}Os lo pide{% else %}Lo tiene{% endif %} la familia {{ p.prestataria }}{% else %}De la biblioteca de {{ p.biblioteca }} · familia {{ p.duena }}{% endif %}
+    </span>
+    <span class="state">{% if it.toca %}<span class="tag toca">Os toca</span> {% endif %}<span class="tag {% if p.estado == 'disputa' %}warn{% elif p.estado == 'activo' %}ok{% endif %}">{{ P.NOMBRES_ESTADO[p.estado] }}</span></span>
+    {% if p.estado in ('activo', 'devolucion') and p.vence %}
+      {% set d = it.dias %}
+      <span class="due {% if d is not none and d < 0 %}late{% elif d is not none and d <= 3 %}soon{% endif %}">
+        {% if d is none %}Vuelve el {{ fecha_bonita(p.vence) }}
+        {% elif d < 0 %}Tenía que volver el {{ fecha_bonita(p.vence) }} (hace {{ -d }} {{ 'día' if d == -1 else 'días' }})
+        {% elif d == 0 %}Vuelve hoy ({{ fecha_bonita(p.vence) }})
+        {% else %}Vuelve el {{ fecha_bonita(p.vence) }} (faltan {{ d }} {{ 'día' if d == 1 else 'días' }}){% endif %}
+      </span>
+    {% endif %}
+    {% if p.prorroga_dias %}<span class="state">⏳ {% if it.rol == 'duena' %}Os piden{% else %}Habéis pedido{% endif %} {{ p.prorroga_dias }} días más.</span>{% endif %}
+    {% if p.estado == 'disputa' and p.disputa %}<span class="muted state">{{ p.disputa }}</span>{% endif %}
+    {% set normales = it.acciones | reject('in', P.DELICADAS) | list %}
+    {% set serias = it.acciones | select('in', P.DELICADAS) | list %}
+    {% if normales %}<div class="acts">
+      {% for a in normales %}
+      <form method="post" action="{{ url_for('cuenta.accion', pid=p.id, nombre=a) }}">
+        <input type="hidden" name="csrf" value="{{ csrf() }}"><input type="hidden" name="ancla" value="#p-{{ p.id }}">
+        <button class="btn small {% if a in ('aceptar','entregar','recibido','confirmar_devolucion','aceptar_prorroga','devuelto') %}solid{% endif %}">{{ P.ETIQUETAS[a] }}</button>
+      </form>
+      {% endfor %}
+    </div>{% endif %}
+    {% for a in serias %}
+    <details class="serio"><summary>{{ P.ETIQUETAS[a] }}…</summary>
+      <form method="post" action="{{ url_for('cuenta.accion', pid=p.id, nombre=a) }}">
+        <span>{% if a == 'perdido' %}El libro se marcará como perdido y desaparecerá de la estantería.{% else %}Lo revisará la administración y os escribirá a las dos familias.{% endif %}</span>
+        <textarea name="nota" maxlength="300" placeholder="Cuéntalo en pocas palabras (opcional)"></textarea>
+        <input type="hidden" name="csrf" value="{{ csrf() }}"><input type="hidden" name="ancla" value="#p-{{ p.id }}">
+        <button class="btn small danger">{{ P.ETIQUETAS[a] }}</button>
+      </form>
+    </details>
+    {% endfor %}
+  </div>
+</div>
+{% endmacro %}
+{% block cuerpo %}
+<div class="hola">
+  <h1>Hola, {{ familia.nombre }}</h1>
+  <p class="muted">Aquí veis los libros que tenéis prestados y los que habéis prestado. Para pedir un libro, buscadlo en la <a href="/">estantería</a> y pulsad «¿Me lo prestas?».</p>
+</div>
+
+{% if listas.pendientes %}
+<section class="card toca-resumen" style="border-color:var(--warn);border-width:2px">
+  <h2>Os toca a vosotros <span class="count">· {{ listas.pendientes|length }}</span></h2>
+  <ul class="resumen">
+  {% for it in listas.pendientes %}{% set p = it.p %}
+    <li><a href="#p-{{ p.id }}">{{ p.titulo }}</a> <span class="muted">— {{ P.ETIQUETAS[(it.acciones | select('in', P.TOCA) | first)] | replace('✅ ', '') | replace('📦 ', '') }}</span></li>
+  {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if listas.nos_piden %}
+<section class="card">
+  <h2>Os piden <span class="count">· {{ listas.nos_piden|length }}</span></h2>
+  {% for it in listas.nos_piden %}{{ tarjeta(it) }}{% endfor %}
+</section>
+{% endif %}
+
+<section class="card">
+  <h2>Libros que nos han prestado <span class="count">· {{ listas.nos_han_prestado|length }}</span></h2>
+  {% for it in listas.nos_han_prestado %}{{ tarjeta(it) }}{% else %}<p class="empty">Ahora mismo no tenéis ningún libro prestado.</p>{% endfor %}
+</section>
+
+<section class="card">
+  <h2>Libros que hemos prestado <span class="count">· {{ listas.hemos_prestado|length }}</span></h2>
+  {% for it in listas.hemos_prestado %}{{ tarjeta(it) }}{% else %}<p class="empty">Ningún libro vuestro está fuera de casa.</p>{% endfor %}
+</section>
+
+{% if listas.hemos_pedido %}
+<section class="card">
+  <h2>Libros que hemos pedido <span class="count">· {{ listas.hemos_pedido|length }}</span></h2>
+  {% for it in listas.hemos_pedido %}{{ tarjeta(it) }}{% endfor %}
+</section>
+{% endif %}
+
+{% if espera %}
+<section class="card">
+  <h2>Avísame cuando vuelva</h2>
+  {% for l in espera %}
+  <div class="lib-row"><span><b>{{ l.titulo }}</b> <span class="muted">· {{ l.biblioteca }}</span></span>
+    <form method="post" action="{{ url_for('cuenta.quitar_espera', lid=l.id) }}" style="margin:0"><input type="hidden" name="csrf" value="{{ csrf() }}"><button class="btn small">Quitar</button></form></div>
+  {% endfor %}
+</section>
+{% endif %}
+
+{% if mis_bibs %}
+<section class="card" id="bibs">
+  <h2>Vuestra biblioteca</h2>
+  {% for b in mis_bibs %}
+  <form class="lib-row" method="post" action="{{ url_for('cuenta.biblioteca', bid=b.id) }}">
+    <b>{{ b.nombre }}</b>
+    <span class="row"><label class="check"><input type="checkbox" name="presta" value="1" {% if b.presta %}checked{% endif %}> Prestamos libros</label>
+    <button class="btn small">Guardar</button></span>
+    <input type="hidden" name="csrf" value="{{ csrf() }}"><input type="hidden" name="ancla" value="#bibs">
+  </form>
+  {% endfor %}
+  <p class="muted" style="font-size:14px">Si quitáis la marca, la biblioteca queda «solo para mirar»: se ven los libros pero nadie puede pedirlos.</p>
+  {% if mis_libros and otras %}
+  <details><summary>Apuntar un préstamo que ya habéis hecho en persona</summary>
+    <form method="post" action="{{ url_for('cuenta.prestar') }}" class="row" style="margin-top:10px;align-items:flex-end">
+      <label>Libro<select name="libro_id" required>{% for l in mis_libros %}<option value="{{ l.id }}">{{ l.titulo }}{% if mis_bibs|length > 1 %} ({{ l.biblioteca }}){% endif %}</option>{% endfor %}</select></label>
+      <label>A la familia<select name="familia_id" required>{% for o in otras %}<option value="{{ o.id }}">{{ o.nombre }}</option>{% endfor %}</select></label>
+      <button class="btn solid">Apuntar</button>
+      <input type="hidden" name="csrf" value="{{ csrf() }}"><input type="hidden" name="ancla" value="#bibs">
+    </form>
+    <p class="muted" style="font-size:14px;margin-top:6px">La otra familia tendrá que confirmar que lo tiene. Plazo: {{ plazo }} días.</p>
+  </details>
+  {% endif %}
+</section>
+{% endif %}
+
+<section class="card" id="ajustes">
+  <h2>Avisos por Telegram</h2>
+  {% if not telegram_ok %}
+    <p class="muted">Los avisos por Telegram no están activados en esta estantería.</p>
+  {% elif familia.telegram_chat %}
+    <p>✅ Telegram vinculado. Os llegarán los avisos de préstamos y los recordatorios, con botones para confirmar sin entrar en la web.</p>
+    <form method="post" action="{{ url_for('cuenta.telegram_quitar') }}"><input type="hidden" name="csrf" value="{{ csrf() }}"><input type="hidden" name="ancla" value="#ajustes"><button class="btn small">Desvincular</button></form>
+  {% else %}
+    <p>Recibid un aviso cuando os pidan un libro, cuando os lo devuelvan y unos días antes de que toque devolverlo.</p>
+    <form method="post" action="{{ url_for('cuenta.telegram_vincular') }}" target="_blank"><input type="hidden" name="csrf" value="{{ csrf() }}"><button class="btn solid">Vincular Telegram</button></form>
+    <p class="muted" style="font-size:14px">Se abrirá Telegram: pulsad «Iniciar». Después volved aquí y recargad la página.</p>
+  {% endif %}
+</section>
+
+{% if listas.historial %}
+<section class="card">
+  <details><summary>Historial ({{ listas.historial|length }})</summary>
+  <div class="scroll" style="margin-top:10px"><table>
+    <thead><tr><th>Libro</th><th>Quién</th><th>Cómo acabó</th><th class="hide-s">Fecha</th></tr></thead>
+    <tbody>{% for it in listas.historial %}{% set p = it.p %}
+      <tr><td>{{ p.titulo }}</td><td>{% if it.rol == 'duena' %}Prestado a {{ p.prestataria }}{% else %}Nos lo prestó {{ p.duena }}{% endif %}</td>
+        <td>{{ P.NOMBRES_ESTADO[p.estado] }}</td><td class="hide-s">{{ fecha_bonita(p.fin or p.actualizado) }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  </details>
+</section>
+{% endif %}
+
+<section class="card">
+  <details><summary>Cambiar la contraseña</summary>
+    <form method="post" action="{{ url_for('cuenta.clave') }}" class="row" style="margin-top:10px;align-items:flex-end">
+      <input type="text" name="usuario" value="{{ familia.usuario }}" autocomplete="username" hidden>
+      <label>Contraseña actual<input type="password" name="actual" autocomplete="current-password" required></label>
+      <label>Nueva<input type="password" name="clave" minlength="8" autocomplete="new-password" required></label>
+      <label>Repite la nueva<input type="password" name="clave2" minlength="8" autocomplete="new-password" required></label>
+      <button class="btn">Cambiar</button>
+      <input type="hidden" name="csrf" value="{{ csrf() }}">
+    </form>
+  </details>
+</section>
+{% endblock %}

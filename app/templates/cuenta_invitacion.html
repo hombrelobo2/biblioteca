@@ -1,0 +1,14 @@
+{% extends "cuenta_base.html" %}
+{% block titulo %}Bienvenida{% endblock %}
+{% block cuerpo %}
+<form class="card" method="post" style="max-width:440px;margin:6vh auto 0;width:100%">
+  <h1>¡Hola, {{ f.nombre }}!</h1>
+  <p>Elegid una contraseña para la cuenta de vuestra familia. La cuenta la lleva una persona adulta.</p>
+  <p class="muted">Vuestro usuario es <b>{{ f.usuario }}</b>.</p>
+  <input type="text" name="usuario" value="{{ f.usuario }}" autocomplete="username" hidden>
+  <label>Contraseña (mínimo 8 caracteres)<input type="password" name="clave" minlength="8" autocomplete="new-password" required autofocus></label>
+  <label>Repite la contraseña<input type="password" name="clave2" minlength="8" autocomplete="new-password" required></label>
+  <button class="btn solid">Guardar y entrar</button>
+  <input type="hidden" name="csrf" value="{{ csrf() }}">
+</form>
+{% endblock %}

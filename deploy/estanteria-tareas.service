@@ -1,0 +1,13 @@
+[Unit]
+Description=Nuestra Estantería (recordatorios y copia semanal por Telegram)
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=estanteria
+Group=estanteria
+WorkingDirectory=/opt/estanteria/app
+EnvironmentFile=/etc/estanteria/estanteria.env
+ExecStart=/opt/estanteria/venv/bin/python tareas.py diario
+NoNewPrivileges=true
+UMask=0027

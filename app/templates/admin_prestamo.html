@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block titulo %}Préstamo{% endblock %}
+{% block cuerpo %}
+<p><a href="{{ url_for('adminp.prestamos') }}">← Préstamos</a></p>
+<div class="card">
+  <div class="row" style="align-items:flex-start">
+    {% if p.portada %}<img class="thumb" src="/portadas/{{ p.portada }}" alt="">{% endif %}
+    <div style="display:flex;flex-direction:column;gap:6px;flex:1">
+      <h1 style="font-size:24px">{{ p.titulo }}</h1>
+      <p>Biblioteca de {{ p.biblioteca }} · familia <b>{{ p.duena }}</b> → lo tiene <b>{{ p.prestataria }}</b></p>
+      <p><span class="tag {% if p.estado == 'disputa' %}warn{% elif p.estado == 'activo' %}ok{% endif %}">{{ P.NOMBRES_ESTADO[p.estado] }}</span>
+        {% if p.inicio %}· desde el {{ fecha_bonita(p.inicio) }}{% endif %}
+        {% if p.vence %}· vuelve el {{ fecha_bonita(p.vence) }}{% endif %}
+        {% if p.fin %}· terminó el {{ fecha_bonita(p.fin) }}{% endif %}
+        {% if p.prorrogas %}· {{ p.prorrogas }} {{ 'prórroga' if p.prorrogas == 1 else 'prórrogas' }}{% endif %}</p>
+      {% if p.disputa %}<p class="flash">{{ p.disputa }}</p>{% endif %}
+      {% if p.nota %}<p class="muted">Nota: {{ p.nota }}</p>{% endif %}
+    </div>
+  </div>
+</div>
+
+<form class="card" method="post" action="{{ url_for('adminp.resolver', pid=p.id) }}">
+  <h2>Decidir</h2>
+  <p class="muted">Úsalo para resolver un desacuerdo o corregir un error. Se avisa a las dos familias.</p>
+  <div class="row" style="align-items:flex-end">
+    <label>Cómo queda<select name="estado">
+      <option value="activo" {% if p.estado == 'disputa' and 'no ha recibido' not in p.disputa %}selected{% endif %}>Sigue prestado (lo tiene {{ p.prestataria }})</option>
+      <option value="devuelto">Devuelto (está en casa de {{ p.duena }})</option>
+      <option value="cancelado" {% if 'no ha recibido' in p.disputa %}selected{% endif %}>Cancelado (nunca llegó a prestarse)</option>
+      <option value="perdido">Perdido</option>
+    </select></label>
+    <label>Nota para las familias (opcional)<input type="text" name="nota" maxlength="300"></label>
+    <button class="btn solid">Guardar decisión</button>
+  </div>
+  <input type="hidden" name="csrf" value="{{ csrf() }}">
+</form>
+
+{% if p.estado in ('activo', 'devolucion', 'disputa') %}
+<form class="card" method="post" action="{{ url_for('adminp.fecha', pid=p.id) }}">
+  <h2>Cambiar la fecha de devolución</h2>
+  <div class="row" style="align-items:flex-end">
+    <label style="flex:0 1 220px">Nueva fecha<input type="date" name="vence" value="{{ p.vence }}" required style="font:inherit;padding:8px 10px;border:1.5px solid var(--line);border-radius:9px;background:var(--surface);color:inherit"></label>
+    <button class="btn">Cambiar</button>
+  </div>
+  <input type="hidden" name="csrf" value="{{ csrf() }}">
+</form>
+{% endif %}
+
+<div class="card scroll">
+  <h2>Qué ha pasado</h2>
+  <table>
+    <thead><tr><th>Fecha</th><th>Quién</th><th>Qué</th></tr></thead>
+    <tbody>{% for e in eventos %}
+      <tr><td>{{ e.fecha[:16] }}</td>
+        <td>{% if e.quien == 'duena' %}{{ p.duena }}{% elif e.quien == 'prestataria' %}{{ p.prestataria }}{% elif e.quien == 'admin' %}Administración{% else %}{{ e.quien }}{% endif %}</td>
+        <td>{{ P.ETIQUETAS.get(e.accion, e.accion).lstrip('✅❌✖️📦⚠️↩️⏳📕 ') if e.accion in P.ETIQUETAS else {'pedir':'Lo pide','prestar':'Apunta que lo presta','cambiar_fecha':'Cambia la fecha'}.get(e.accion, e.accion.replace('resolver:', 'Decide: ')) }}{% if e.detalle %} <span class="muted">— {{ e.detalle }}</span>{% endif %}</td></tr>
+    {% endfor %}</tbody>
+  </table>
+</div>
+{% endblock %}

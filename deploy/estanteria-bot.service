@@ -1,0 +1,18 @@
+[Unit]
+Description=Nuestra Estantería (bot de Telegram)
+After=network-online.target estanteria.service
+Wants=network-online.target
+
+[Service]
+User=estanteria
+Group=estanteria
+WorkingDirectory=/opt/estanteria/app
+EnvironmentFile=/etc/estanteria/estanteria.env
+ExecStart=/opt/estanteria/venv/bin/python bot.py
+Restart=on-failure
+RestartSec=10
+NoNewPrivileges=true
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target

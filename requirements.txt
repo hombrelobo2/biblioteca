@@ -1,0 +1,4 @@
+flask>=3.0,<4
+gunicorn>=22
+requests>=2.31
+pillow>=10

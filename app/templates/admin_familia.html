@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block titulo %}{{ f.nombre }}{% endblock %}
+{% block cuerpo %}
+<p><a href="{{ url_for('adminp.familias') }}">← Familias</a></p>
+<h1>{{ f.nombre }} {% if not f.activa %}<span class="tag">desactivada</span>{% endif %}</h1>
+
+{% if invitacion %}
+<div class="card" style="border-color:var(--ok);border-width:2px">
+  <h2>Enlace de invitación</h2>
+  <p>Mándaselo a la familia (por WhatsApp, Telegram o correo). Con él eligen su contraseña. Sirve una sola vez y caduca en {{ dias }} días. <b>Cópialo ahora</b>: por seguridad no se vuelve a mostrar.</p>
+  <div class="row"><input type="text" id="inv" value="{{ invitacion }}" readonly style="flex:1 1 300px" onclick="this.select()">
+    <button class="btn solid" type="button" id="copiar">Copiar</button></div>
+  <p class="muted">Su usuario para entrar es <b>{{ f.usuario }}</b>.</p>
+</div>
+{% endif %}
+
+<form class="card" method="post" action="{{ url_for('adminp.familia_guardar', fid=f.id) }}">
+  <h2>Datos</h2>
+  <div class="row">
+    <label>Nombre<input type="text" name="nombre" value="{{ f.nombre }}" maxlength="60" required></label>
+    <label>Usuario<input type="text" name="usuario" value="{{ f.usuario }}" maxlength="30" required autocapitalize="none"></label>
+  </div>
+  <fieldset style="border:0;padding:0;margin:0">
+    <legend style="font-weight:700;font-size:14px;margin-bottom:6px">Sus bibliotecas</legend>
+    <div class="row">{% for b in bibs %}<label class="check"><input type="checkbox" name="bibliotecas" value="{{ b.id }}" {% if b.familia_id == f.id %}checked{% endif %}> {{ b.nombre }}{% if b.familia and b.familia_id != f.id %} <span class="muted">(ahora de {{ b.familia }})</span>{% endif %}</label>{% else %}<span class="muted">No hay bibliotecas.</span>{% endfor %}</div>
+  </fieldset>
+  <label class="check"><input type="checkbox" name="activa" value="1" {% if f.activa %}checked{% endif %}> Cuenta activa (si la quitas, no puede entrar ni pedir libros; su historial se conserva)</label>
+  <p><button class="btn solid">Guardar</button></p>
+  <p class="muted">Contraseña: {% if f.clave_hash %}puesta{% else %}todavía no ha usado la invitación{% endif %} · Telegram: {% if f.telegram_chat %}vinculado{% else %}no{% endif %} · Último acceso: {{ fecha_bonita(f.ultimo_acceso) or 'nunca' }}</p>
+  <input type="hidden" name="csrf" value="{{ csrf() }}">
+</form>
+
+<div class="card">
+  <h2>Acceso</h2>
+  <div class="row">
+    <form method="post" action="{{ url_for('adminp.familia_invitacion', fid=f.id) }}"><input type="hidden" name="csrf" value="{{ csrf() }}"><button class="btn">🔗 Nuevo enlace (invitación o contraseña olvidada)</button></form>
+    {% if f.telegram_chat %}<form method="post" action="{{ url_for('adminp.familia_telegram_quitar', fid=f.id) }}"><input type="hidden" name="csrf" value="{{ csrf() }}"><button class="btn">Desvincular Telegram</button></form>{% endif %}
+  </div>
+</div>
+
+<div class="card scroll">
+  <h2>Préstamos</h2>
+  {% include "_tabla_prestamos.html" %}
+</div>
+
+<div class="card">
+  <details>
+    <summary>Borrar esta familia</summary>
+    <form method="post" action="{{ url_for('adminp.familia_borrar', fid=f.id) }}" class="row" style="margin-top:10px;align-items:flex-end">
+      <label>Se borran su cuenta, su Telegram y sus avisos. Sus bibliotecas y libros se quedan, pero sin familia dueña. Solo se puede si no tiene préstamos en marcha. Escribe «{{ f.nombre }}» para confirmar
+        <input type="text" name="confirmar" autocomplete="off"></label>
+      <button class="btn danger">Borrar familia</button>
+      <input type="hidden" name="csrf" value="{{ csrf() }}">
+    </form>
+  </details>
+</div>
+{% endblock %}
+{% block js %}
+<script>
+var b = document.getElementById("copiar");
+if (b) b.addEventListener("click", function(){
+  var i = document.getElementById("inv"); i.select();
+  (navigator.clipboard ? navigator.clipboard.writeText(i.value) : Promise.reject()).then(function(){ b.textContent = "¡Copiado!"; }, function(){ document.execCommand("copy"); b.textContent = "¡Copiado!"; });
+});
+</script>
+{% endblock %}

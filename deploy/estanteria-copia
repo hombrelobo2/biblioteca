@@ -1,0 +1,10 @@
+#!/bin/sh
+# Copia de seguridad diaria de Nuestra Estantería (base de datos + portadas).
+# Se guardan los últimos 14 días en /var/backups/estanteria.
+set -eu
+DEST=/var/backups/estanteria
+DIA=$(date +%F)
+mkdir -p "$DEST"
+sqlite3 /var/lib/estanteria/estanteria.db ".backup '$DEST/estanteria-$DIA.db'"
+tar -czf "$DEST/portadas-$DIA.tar.gz" -C /var/lib/estanteria portadas
+find "$DEST" -type f -mtime +14 -delete

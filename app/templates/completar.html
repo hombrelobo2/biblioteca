@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% block titulo %}Completar datos{% endblock %}
+{% block css %}
+.cifras{display:flex;flex-wrap:wrap;gap:8px}
+.cifra{background:var(--soft);border:1.5px solid var(--line);border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;min-width:120px}
+.cifra b{font-size:22px;font-variant-numeric:tabular-nums}
+.cifra span{font-size:13px;color:var(--muted)}
+.prop{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:14px;display:flex;gap:14px;align-items:flex-start}
+.prop.nada{opacity:.6}
+.prop .portada{width:84px;flex:0 0 84px;display:flex;flex-direction:column;gap:6px;align-items:center}
+.prop .portada img,.prop .portada .noimg{width:84px;aspect-ratio:2/3;object-fit:cover;border-radius:4px;background:var(--line)}
+.prop .portada .noimg{display:grid;place-items:center;font-size:11px;color:var(--muted);text-align:center}
+.prop .cuerpo{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.prop header b{font-size:16px}
+.cambio{display:flex;gap:8px;align-items:flex-start}
+.cambio input[type=checkbox]{margin-top:10px;width:18px;height:18px;flex:0 0 auto}
+.cambio label{flex:1}
+.aviso{font-size:14px;color:var(--muted)}
+.prop .tag{white-space:normal;align-self:flex-start}
+.barra{position:sticky;bottom:0;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;box-shadow:0 -8px 24px -18px rgba(0,0,0,.5)}
+#lista{display:flex;flex-direction:column;gap:12px}
+@media (max-width:520px){ .prop{flex-direction:column} }
+{% endblock %}
+{% block cuerpo %}
+<p><a href="{{ url_for('biblioteca', bid=b.id) if b else url_for('panel') }}">← Volver</a></p>
+<h1>Completar datos que faltan{% if b %} · {{ b.nombre }}{% endif %}</h1>
+<div class="card">
+  <p>Busca en las librerías los libros {% if b %}de esta biblioteca{% else %}de todas las bibliotecas{% endif %} a los que les falta algo y te propone los datos. <b>No se guarda nada sin que lo revises</b>, y lo que ya está escrito nunca se cambia.</p>
+  <div class="cifras">
+    <div class="cifra"><b>{{ cuenta.resumen }}</b><span>sin resumen</span></div>
+    <div class="cifra"><b>{{ cuenta.numero }}</b><span>en una colección sin número</span></div>
+    <div class="cifra"><b>{{ cuenta.paginas }}</b><span>sin páginas</span></div>
+    <div class="cifra"><b>{{ cuenta.portada }}</b><span>sin portada</span></div>
+  </div>
+  <div class="row" id="opciones">
+    <span class="muted">Completar:</span>
+    <label class="check"><input type="checkbox" name="que" value="resumen" checked {% if not ia_lista %}disabled{% endif %}> Resúmenes{% if not ia_lista %} (necesita la clave de Gemini){% endif %}</label>
+    <label class="check"><input type="checkbox" name="que" value="numero" checked> Números de colección</label>
+    <label class="check"><input type="checkbox" name="que" value="paginas" checked> Páginas</label>
+    <label class="check"><input type="checkbox" name="que" value="portada" checked> Portadas</label>
+  </div>
+  {% if ya_revisados %}<label class="check"><input type="checkbox" id="todos"> Volver a mirar también los {{ ya_revisados }} libros que ya se revisaron otras veces</label>{% endif %}
+  <div class="row"><button class="btn solid" id="empezar" {% if not total and not ya_revisados %}disabled{% endif %}>Empezar</button>
+    <span class="estado muted" id="estado" role="status">{% if total %}{{ total }} libros por revisar. Se buscan de 10 en 10.{% else %}No hay libros pendientes.{% endif %}</span></div>
+</div>
+<div id="lista"></div>
+<div class="barra" id="barra" hidden>
+  <span id="info"></span>
+  <span class="row">
+    <button class="btn" id="parar">Parar</button>
+    <button class="btn solid" id="guardar">Guardar los marcados y seguir</button>
+  </span>
+</div>
+{% endblock %}
+{% block js %}
+<script>
+(function(){
+"use strict";
+var CSRF = {{ csrf()|tojson }};
+var BIB = {{ (b.id if b else "")|tojson }};
+var $ = function(id){ return document.getElementById(id); };
+var cola = [], total = 0, hechos = 0, lote = [], siguiente = null, que = [], parado = false;
+
+function el(tag, attrs, kids){
+  var e = document.createElement(tag);
+  for (var k in (attrs || {})) {
+    if (k === "text") e.textContent = attrs[k];
+    else if (k === "on") for (var ev in attrs.on) e.addEventListener(ev, attrs.on[ev]);
+    else if (attrs[k] !== false && attrs[k] != null) e.setAttribute(k, attrs[k] === true ? "" : attrs[k]);
+  }
+  (kids || []).forEach(function(c){ if (c) e.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+  return e;
+}
+function verImagen(u){
+  return /^https:\/\/(web\.elkarbanaketa\.eus|static\.cegal\.es)\//.test(u) ? "{{ url_for('api_imagen') }}?u=" + encodeURIComponent(u) : u;
+}
+async function pedir(url, cuerpo){
+  var r = await fetch(url, cuerpo ? { method: "POST", credentials: "same-origin",
+    headers: { "Content-Type": "application/json", "X-CSRF": CSRF }, body: JSON.stringify(cuerpo) } : { credentials: "same-origin" });
+  if (r.redirected) { location.href = "{{ url_for('login') }}"; throw new Error("sesión caducada"); }
+  if (!r.ok) throw new Error("error " + r.status);
+  return r.json();
+}
+
+$("empezar").addEventListener("click", async function(){
+  que = [].map.call(document.querySelectorAll('input[name=que]:checked'), function(i){ return i.value; });
+  if (!que.length) { $("estado").textContent = "Marca al menos una cosa para completar."; return; }
+  this.disabled = true;
+  [].forEach.call(document.querySelectorAll("#opciones input, #todos"), function(i){ i.disabled = true; });
+  var todos = $("todos") && $("todos").checked ? "1" : "0";
+  try {
+    var j = await pedir("{{ url_for('api_completar_pendientes') }}?b=" + encodeURIComponent(BIB) + "&todos=" + todos + "&que=" + que.join(","));
+    cola = j.ids; total = cola.length;
+  } catch (e) { $("estado").textContent = "No se ha podido empezar: " + e.message; this.disabled = false; return; }
+  if (!total) { $("estado").textContent = "No hay libros pendientes con lo que has marcado."; return; }
+  $("barra").hidden = false;
+  siguiente = cargar();
+  await mostrarSiguiente();
+});
+
+function cargar(){
+  var ids = cola.splice(0, 10);
+  if (!ids.length) return null;
+  return pedir("{{ url_for('api_completar_propuestas') }}", { ids: ids, que: que })
+    .then(function(j){ return { ids: ids, propuestas: j.propuestas }; },
+          function(e){ return { ids: ids, propuestas: [], error: e.message }; });
+}
+
+async function mostrarSiguiente(){
+  $("lista").textContent = "";
+  if (!siguiente || parado) { fin(); return; }
+  $("guardar").disabled = true;
+  $("estado").textContent = "Buscando en las librerías" + (que.indexOf("resumen") >= 0 ? " y escribiendo resúmenes con Gemini" : "") + "… (" + hechos + " de " + total + " revisados)";
+  $("info").textContent = "Buscando…";
+  var datos = await siguiente;
+  siguiente = cargar();          // mientras revisas este lote, se va buscando el siguiente
+  lote = datos;
+  if (datos.error) {
+    $("lista").appendChild(el("p", { class: "flash", text: "Este lote ha fallado (" + datos.error + "). Puedes saltarlo y seguir." }));
+  }
+  // primero los que traen algo que guardar; al final los que no se han encontrado
+  datos.propuestas.slice().sort(function(a, b){ return Object.keys(b.cambios || {}).length - Object.keys(a.cambios || {}).length; }).forEach(pintar);
+  var n = contar();
+  $("estado").textContent = "Revisa estos libros (" + (hechos + datos.ids.length) + " de " + total + ").";
+  $("guardar").disabled = false;
+  actualizarInfo();
+  window.scrollTo({ top: $("lista").offsetTop - 12, behavior: "smooth" });
+}
+
+var ETIQUETAS = { resumen: "Resumen", numero: "Número en la colección", paginas: "Páginas", portada_url: "Portada" };
+
+function pintar(p){
+  var cambios = Object.keys(p.cambios || {});
+  var caja = el("section", { class: "prop" + (cambios.length ? "" : " nada") });
+  p.campos = {};
+  var portada = el("div", { class: "portada" });
+  if (p.cambios.portada_url) {
+    portada.appendChild(el("img", { src: verImagen(p.cambios.portada_url), alt: "Portada propuesta", loading: "lazy", referrerpolicy: "no-referrer" }));
+  } else {
+    portada.appendChild(p.portada_actual ? el("img", { src: "/portadas/" + encodeURIComponent(p.portada_actual), alt: "Portada actual", loading: "lazy" })
+                                         : el("span", { class: "noimg", text: "sin portada" }));
+  }
+  caja.appendChild(portada);
+  var cuerpo = el("div", { class: "cuerpo" }, [
+    el("header", {}, [el("b", { text: p.titulo }), el("span", { class: "muted", text: [" · " + (p.autor || ""), p.coleccion ? "· " + p.coleccion + (p.numero_actual ? " " + p.numero_actual : "") : ""].join(" ") })]),
+  ]);
+  if (p.encontrado) cuerpo.appendChild(el("span", { class: "tag", text: "Encontrado en " + p.fuente + (p.isbn ? " · ISBN " + p.isbn : "") }));
+  cambios.forEach(function(k){
+    var v = p.cambios[k];
+    var marca = el("input", { type: "checkbox", checked: true, "aria-label": "Guardar " + ETIQUETAS[k], on: { change: actualizarInfo } });
+    var campo = k === "resumen" ? el("textarea", { rows: 3, maxlength: 600 }) : (k === "portada_url" ? null : el("input", { type: "text", maxlength: k === "numero" ? 6 : 5 }));
+    if (campo) { campo.value = v; campo.addEventListener("input", function(){ marca.checked = true; actualizarInfo(); }); }
+    p.campos[k] = { marca: marca, campo: campo, valor: v };
+    cuerpo.appendChild(el("div", { class: "cambio" }, [marca, el("label", {}, [
+      ETIQUETAS[k] + (k === "resumen" ? " ✨ escrito por Gemini, revísalo" : "") + (k === "portada_url" ? " (la de la izquierda)" : ""),
+      campo
+    ])]));
+  });
+  if (p.aviso) cuerpo.appendChild(el("p", { class: "aviso", text: p.aviso }));
+  caja.appendChild(cuerpo);
+  $("lista").appendChild(caja);
+}
+
+function contar(){
+  var n = 0;
+  (lote.propuestas || []).forEach(function(p){
+    Object.keys(p.campos || {}).forEach(function(k){ if (p.campos[k].marca.checked) n++; });
+  });
+  return n;
+}
+function actualizarInfo(){
+  var n = contar();
+  $("info").textContent = n + (n === 1 ? " dato marcado" : " datos marcados") + " en este lote";
+  $("guardar").textContent = n ? "Guardar los marcados y seguir" : "Seguir sin guardar";
+}
+
+$("guardar").addEventListener("click", async function(){
+  this.disabled = true;
+  var cambios = [];
+  (lote.propuestas || []).forEach(function(p){
+    var c = { id: p.id }, alguno = false;
+    Object.keys(p.campos || {}).forEach(function(k){
+      var x = p.campos[k];
+      if (!x.marca.checked) return;
+      c[k] = x.campo ? x.campo.value : x.valor; alguno = true;
+      if (k === "resumen" && x.campo && x.campo.value.trim() !== String(x.valor).trim()) c.resumen_editado = true;
+    });
+    if (alguno) { if (p.isbn) c.isbn = p.isbn; cambios.push(c); }
+  });
+  try {
+    var j = await pedir("{{ url_for('api_completar_guardar') }}", { cambios: cambios, revisados: lote.ids || [] });
+    hechos += (lote.ids || []).length;
+    if (j.avisos && j.avisos.length) {
+      $("lista").textContent = "";
+      $("lista").appendChild(el("p", { class: "flash", text: "Avisos: " + j.avisos.join(" · ") }));
+    }
+  } catch (e) {
+    $("estado").textContent = "No se ha podido guardar: " + e.message;
+    this.disabled = false;
+    return;
+  }
+  await mostrarSiguiente();
+});
+
+$("parar").addEventListener("click", function(){
+  parado = true; fin("Parado. Lo que ya has guardado se queda; la próxima vez seguirá con los que falten.");
+});
+
+function fin(msg){
+  $("lista").textContent = "";
+  $("barra").hidden = true;
+  $("estado").textContent = msg || ("Terminado: " + hechos + " libros revisados.");
+  $("lista").appendChild(el("p", {}, [el("a", { class: "btn", href: BIB ? "{{ url_for('biblioteca', bid='__B__') }}".replace("__B__", BIB) : "{{ url_for('panel') }}", text: "Volver" })]));
+}
+})();
+</script>
+{% endblock %}

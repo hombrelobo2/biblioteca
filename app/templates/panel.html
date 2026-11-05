@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block titulo %}Bibliotecas{% endblock %}
+{% block cuerpo %}
+<div class="row" style="justify-content:space-between">
+  <h1>Bibliotecas</h1>
+  <span class="row"><a class="btn" href="{{ url_for('completar_pagina') }}">✨ Completar datos que faltan</a>
+  <a class="btn" href="{{ url_for('colecciones') }}">Colecciones</a>
+  <a class="btn solid" href="{{ url_for('nuevas') }}">＋ Nuevas entradas</a></span>
+</div>
+<div class="card scroll">
+  <table>
+    <thead><tr><th>Nombre</th><th class="n">Libros</th><th class="n hide-s">Con portada</th><th class="n hide-s">Con resumen</th><th class="n hide-s">Resumen IA sin revisar</th></tr></thead>
+    <tbody>
+    {% for b in bibliotecas %}
+      <tr><td><a href="{{ url_for('biblioteca', bid=b.id) }}"><b>{{ b.nombre }}</b></a></td>
+        <td class="n">{{ b.n }}</td><td class="n hide-s">{{ b.con_portada or 0 }}</td><td class="n hide-s">{{ b.con_resumen or 0 }}</td><td class="n hide-s">{{ b.ia_sin_revisar or 0 }}</td></tr>
+    {% else %}
+      <tr><td colspan="5" class="muted">Todavía no hay bibliotecas.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+<form class="card" method="post" action="{{ url_for('biblioteca_nueva') }}">
+  <h2>Crear una biblioteca vacía</h2>
+  <div class="row">
+    <label>Nombre de pila<input type="text" name="nombre" maxlength="60" placeholder="Por ejemplo: Ane" required></label>
+    <button class="btn solid" style="align-self:flex-end">Crear</button>
+  </div>
+  <p class="muted">También puedes crearla directamente desde «Nuevas entradas».</p>
+  <input type="hidden" name="csrf" value="{{ csrf() }}">
+</form>
+<div class="card">
+  <h2>Copia de seguridad</h2>
+  <p>Descarga un archivo .zip con la base de datos y todas las portadas. Guárdalo en tu ordenador de vez en cuando (además de las copias automáticas diarias del contenedor).</p>
+  <p><a class="btn" href="{{ url_for('copia') }}">⬇ Descargar copia de seguridad</a></p>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block titulo %}{{ b.nombre }}{% endblock %}
+{% block cuerpo %}
+<div class="row" style="justify-content:space-between">
+  <h1>{{ b.nombre }} <span class="muted" style="font-size:16px;font-weight:400">· {{ libros|length }} libros</span></h1>
+  <span class="row"><a class="btn" href="{{ url_for('completar_pagina', b=b.id) }}">✨ Completar datos que faltan</a>
+  <a class="btn solid" href="{{ url_for('nuevas', b=b.id) }}">＋ Añadir libros</a></span>
+</div>
+<form class="card" method="post" action="{{ url_for('biblioteca_familia', bid=b.id) }}">
+  <h2>Préstamos</h2>
+  <div class="row" style="align-items:flex-end">
+    <label>Familia dueña (gestiona los préstamos)<select name="familia_id">
+      <option value="">— Ninguna (no se puede pedir) —</option>
+      {% for f in familias %}<option value="{{ f.id }}" {% if f.id == b.familia_id %}selected{% endif %}>{{ f.nombre }}{% if not f.activa %} (desactivada){% endif %}</option>{% endfor %}
+    </select></label>
+    <label class="check"><input type="checkbox" name="presta" value="1" {% if b.presta %}checked{% endif %}> Presta libros (si no, «solo para mirar»)</label>
+    <button class="btn">Guardar</button>
+  </div>
+  {% if not familias %}<p class="muted">Primero crea las familias en <a href="{{ url_for('adminp.familias') }}">Familias</a>.</p>{% endif %}
+  <input type="hidden" name="csrf" value="{{ csrf() }}">
+</form>
+<div class="card scroll">
+  <table>
+    <thead><tr><th></th><th>Título</th><th class="hide-s">Colección</th><th class="n hide-s">Pág.</th><th>Datos</th><th></th></tr></thead>
+    <tbody>
+    {% for l in libros %}
+      <tr>
+        <td>{% if l.portada %}<img class="thumb" src="/portadas/{{ l.portada }}" alt="" loading="lazy">{% else %}<span class="thumb ph">sin<br>portada</span>{% endif %}</td>
+        <td><b>{{ l.titulo }}</b>{% if l.autor %}<br><span class="muted">{{ l.autor }}</span>{% endif %}</td>
+        <td class="hide-s">{{ l.coleccion }}{% if l.numero %} · {{ l.numero }}{% endif %}</td>
+        <td class="n hide-s">{{ l.paginas }}</td>
+        <td>{% if not l.resumen %}<span class="tag warn">sin resumen</span>{% elif l.resumen_origen == 'ia' %}<span class="tag ia" title="Escrito por Gemini. Ábrelo en «Editar» y márcalo como revisado.">✨ resumen IA · sin revisar</span>{% else %}<span class="tag ok">resumen</span>{% endif %}
+          {% if l.coleccion and l.coleccion != 'En euskera' and not l.numero %}<span class="tag warn">sin número</span>{% endif %}
+          {% if l.perdido %}<span class="tag warn">perdido</span>{% endif %}
+          {% if abiertos.get(l.id) %}{% set a = abiertos[l.id] %}<span class="tag {% if a.estado == 'disputa' %}warn{% endif %}" title="{{ nombres_estado[a.estado] }}">📖 {{ a.prestataria }}{% if a.vence %} · {{ fecha_bonita(a.vence) }}{% endif %}</span>{% endif %}</td>
+        <td><a class="btn small" href="{{ url_for('libro', lid=l.id) }}">Editar</a></td>
+      </tr>
+    {% else %}
+      <tr><td colspan="6" class="muted">Esta biblioteca no tiene libros todavía.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+<div class="card">
+  <form method="post" action="{{ url_for('biblioteca_renombrar', bid=b.id) }}" class="row">
+    <label>Cambiar el nombre<input type="text" name="nombre" value="{{ b.nombre }}" maxlength="60" required></label>
+    <button class="btn" style="align-self:flex-end">Guardar nombre</button>
+    <input type="hidden" name="csrf" value="{{ csrf() }}">
+  </form>
+  <details>
+    <summary>Borrar esta biblioteca</summary>
+    <form method="post" action="{{ url_for('biblioteca_borrar', bid=b.id) }}" class="row" style="margin-top:10px">
+      <label>Se borrarán también sus {{ libros|length }} libros. Escribe «{{ b.nombre }}» para confirmar
+        <input type="text" name="confirmar" autocomplete="off"></label>
+      <button class="btn danger" style="align-self:flex-end">Borrar para siempre</button>
+      <input type="hidden" name="csrf" value="{{ csrf() }}">
+    </form>
+  </details>
+</div>
+{% endblock %}
