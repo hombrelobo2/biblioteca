@@ -1,5 +1,9 @@
 # Novedades
 
+## 1.2.2 — 2026-11-05
+
+- Guía para niños y niñas en PDF (qué es la estantería y cómo se usa), enlazada al pie de la estantería.
+
 ## 1.2.1 — 2026-11-05
 
 - Botón «☀️ Modo claro / 🌙 Modo oscuro» en la estantería (arriba) y al pie de «Mi cuenta» y la administración. Cada aparato recuerda lo que elijas.

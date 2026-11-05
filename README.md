@@ -99,6 +99,8 @@ O dentro del contenedor: `estanteria-actualizar`. Antes de tocar nada se guarda 
 
 ## Documentación
 
+📖 **[Guía para niños y niñas (PDF)](docs/guia-para-ninos.pdf)**: qué es la estantería y cómo se usa, explicado para los lectores y lectoras de la casa. Se puede imprimir.
+
 | | |
 |---|---|
 | [Instalación y mantenimiento](docs/instalacion.md) | Qué se instala y dónde, HTTPS, copias de seguridad, restaurar, problemas frecuentes |

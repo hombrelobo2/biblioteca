@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Nuestra Estantería · Guía para lectores y lectoras</title>
+<style>
+@page { size: A4; margin: 0; }
+:root{ --papel:#fbf3e4; --tinta:#3b2a1a; --suave:#7a6350; --naranja:#d9480f; --rosa:#ff8fab; --azul:#74c0fc; --verde:#8ce99a; --amarillo:#ffc078; --lila:#b197fc; --madera1:#d39a62; --madera2:#a8703f; }
+*{ box-sizing:border-box; }
+body{ margin:0; font-family:"Inter",sans-serif; color:var(--tinta); }
+.pag{ width:210mm; height:297mm; padding:20mm 20mm 24mm; background:var(--papel) radial-gradient(#f0dfc1 1.3px, transparent 1.8px) 0 0/8mm 8mm; position:relative; overflow:hidden; page-break-after:always; display:flex; flex-direction:column; gap:7mm; }
+.pag:last-child{ page-break-after:auto; }
+.pag::after{ content:""; position:absolute; left:0; right:0; bottom:0; height:9mm; background:linear-gradient(var(--madera1), var(--madera2)); }
+.num{ position:absolute; bottom:12mm; right:20mm; font-weight:700; color:var(--suave); font-size:11pt; }
+h1,h2{ font-family:"Inter Display","Inter",sans-serif; font-weight:800; margin:0; line-height:1.05; }
+h1{ font-size:44pt; }
+h2{ font-size:30pt; display:flex; align-items:center; gap:5mm; }
+h2 .bola{ flex:none; width:15mm; height:15mm; border-radius:50%; display:inline-grid; place-items:center; font-size:20pt; color:var(--tinta); }
+p, li{ font-size:17pt; line-height:1.45; margin:0; }
+.grande{ font-size:20pt; }
+.tarjeta{ background:#fff; border-radius:7mm; border-top:3mm solid var(--c, var(--rosa)); padding:7mm 8mm; display:flex; flex-direction:column; gap:4mm; box-shadow:0 2mm 5mm -3mm rgba(60,35,10,.45); }
+.fila{ display:flex; gap:7mm; align-items:center; }
+.foto{ border-radius:5mm; box-shadow:0 2mm 6mm -2mm rgba(60,35,10,.5); border:1mm solid #fff; }
+.pasos{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:4.5mm; }
+.pasos li{ display:flex; gap:5mm; align-items:flex-start; }
+.pasos li b.n{ flex:none; width:12mm; height:12mm; border-radius:50%; background:var(--naranja); color:#fff; display:inline-grid; place-items:center; font-size:16pt; }
+.boton{ display:inline-block; background:var(--naranja); color:#fff; border-radius:999px; padding:0.5mm 4mm; font-weight:700; white-space:nowrap; }
+.boton.sec{ background:#fff; color:var(--tinta); border:0.6mm solid var(--tinta); }
+.etiqueta{ display:inline-block; background:var(--naranja); color:#fff; border-radius:999px; padding:0 3mm; font-weight:700; font-size:14pt; }
+.reglas{ display:grid; grid-template-columns:1fr 1fr; gap:5mm; }
+.regla{ background:#fff; border-radius:6mm; padding:5mm 6mm; display:flex; gap:4mm; align-items:flex-start; border-left:3mm solid var(--c); }
+.regla p{ font-size:15.5pt; }
+.regla svg{ flex:none; }
+.glosario{ display:flex; flex-direction:column; gap:4mm; }
+.glosario div{ background:#fff; border-radius:5mm; padding:5mm 7mm; font-size:16pt; line-height:1.4; }
+.glosario b{ font-size:18pt; }
+.bocadillo{ background:#fff; border-radius:8mm; padding:6mm 8mm; position:relative; font-size:19pt; font-weight:700; box-shadow:0 2mm 5mm -3mm rgba(60,35,10,.45); }
+.bocadillo::after{ content:""; position:absolute; right:-6mm; top:50%; border:5mm solid transparent; border-left:7mm solid #fff; transform:translateY(-50%); }
+.muted{ color:var(--suave); }
+.portada{ justify-content:center; align-items:center; text-align:center; gap:10mm; }
+.portada h1{ font-size:56pt; }
+.portada .sub{ font-size:22pt; font-weight:700; color:var(--naranja); }
+.estante{ width:150mm; height:6mm; border-radius:2mm; background:linear-gradient(var(--madera1), var(--madera2)); box-shadow:0 2mm 3mm -1mm rgba(80,45,10,.45); }
+.libros{ display:flex; gap:3mm; align-items:flex-end; justify-content:center; }
+.libros span{ display:block; width:15mm; border-radius:1.5mm 3mm 3mm 1.5mm; box-shadow:inset 1.5mm 0 0 rgba(0,0,0,.18); }
+</style>
+</head>
+<body>
+
+<!-- Búho reutilizable -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <g id="buho">
+      <ellipse cx="60" cy="112" rx="40" ry="6" fill="rgba(0,0,0,.12)"/>
+      <path d="M24 46 Q22 18 40 26 L60 34 L80 26 Q98 18 96 46 Q102 96 60 104 Q18 96 24 46Z" fill="#8a5a3b"/>
+      <path d="M36 64 Q60 52 84 64 Q86 96 60 98 Q34 96 36 64Z" fill="#f2d3a7"/>
+      <circle cx="44" cy="50" r="15" fill="#fff"/><circle cx="76" cy="50" r="15" fill="#fff"/>
+      <circle cx="46" cy="52" r="7" fill="#2b1d12"/><circle cx="74" cy="52" r="7" fill="#2b1d12"/>
+      <circle cx="48" cy="49" r="2.4" fill="#fff"/><circle cx="76" cy="49" r="2.4" fill="#fff"/>
+      <path d="M56 60 L64 60 L60 68Z" fill="#f59f00"/>
+      <path d="M30 80 L60 74 L90 80 L90 100 L60 94 L30 100Z" fill="#e8590c"/><path d="M60 74 L60 94" stroke="#fff" stroke-width="2"/>
+      <path d="M34 84 L56 80 M34 89 L56 85 M64 80 L86 84 M64 85 L86 89" stroke="#ffd8a8" stroke-width="2" stroke-linecap="round"/>
+    </g>
+  </defs>
+</svg>
+
+<!-- 1. Portada -->
+<section class="pag portada">
+  <svg viewBox="0 0 120 120" width="300" height="300"><use href="#buho"/></svg>
+  <h1>Nuestra Estantería</h1>
+  <p class="sub">Guía para lectores y lectoras</p>
+  <div>
+    <div class="libros">
+      <span style="height:34mm;background:#c2255c"></span><span style="height:28mm;background:#1864ab"></span>
+      <span style="height:38mm;background:#2b7a3a"></span><span style="height:30mm;background:#f08c00"></span>
+      <span style="height:36mm;background:#5f3dc4"></span><span style="height:26mm;background:#0b7285"></span>
+      <span style="height:33mm;background:#c9470f"></span>
+    </div>
+    <div class="estante"></div>
+  </div>
+  <p class="grande muted">Todos los libros de nuestras casas,<br>en un solo sitio.</p>
+</section>
+
+<!-- 2. Qué es -->
+<section class="pag">
+  <h2><span class="bola" style="background:var(--rosa)">?</span>¿Qué es?</h2>
+  <div class="fila">
+    <div class="bocadillo" style="flex:1">¡Hola! Soy el búho lector. Te enseño cómo funciona.</div>
+    <svg viewBox="0 0 120 120" width="150" height="150"><use href="#buho"/></svg>
+  </div>
+  <div class="tarjeta" style="--c:var(--azul)">
+    <p class="grande">Imagina una <b>estantería gigante</b> con los libros de todas las casas de tus amigos y amigas.</p>
+    <p>Cada familia pone en ella los libros que tiene en casa. Así puedes ver qué libros tienen los demás.</p>
+  </div>
+  <div class="tarjeta" style="--c:var(--verde)">
+    <p class="grande">Y lo mejor: ¡os los podéis <b>prestar</b>!</p>
+    <p>Si ves un libro que te gusta, tu familia se lo puede pedir prestado a la familia que lo tiene. Cuando lo termines, lo devuelves para que lo lea otra persona.</p>
+  </div>
+  <div class="tarjeta" style="--c:var(--amarillo)">
+    <p>Es como una biblioteca, pero hecha entre todos.</p>
+  </div>
+  <span class="num">2</span>
+</section>
+
+<!-- 3. Mirar los libros -->
+<section class="pag">
+  <h2><span class="bola" style="background:var(--azul)">1</span>Mirar los libros</h2>
+  <div class="fila" style="align-items:flex-start">
+    <img class="foto" src="estanteria.png" style="width:72mm">
+    <ul class="pasos">
+      <li><b class="n">1</b><p>Abre la página de la estantería en el móvil, la tablet o el ordenador. Pide la dirección a tu familia.</p></li>
+      <li><b class="n">2</b><p>Verás una tarjeta de color por cada casa: <b>«La estantería de…»</b>.</p></li>
+      <li><b class="n">3</b><p>Los libros de la misma colección están juntos, en su balda de madera.</p></li>
+      <li><b class="n">4</b><p>¿Buscas uno? Escribe el título o el nombre de quien lo escribió en el <b>buscador</b>.</p></li>
+    </ul>
+  </div>
+  <div class="tarjeta" style="--c:var(--lila)">
+    <p><b>Truco:</b> pulsa <span class="boton sec">Solo en casa</span> para ver solo los libros que se pueden pedir ahora mismo.</p>
+  </div>
+  <span class="num">3</span>
+</section>
+
+<!-- 4. Descubrir de qué va -->
+<section class="pag">
+  <h2><span class="bola" style="background:var(--verde)">2</span>¿De qué va el libro?</h2>
+  <p class="grande">Toca la portada de un libro y se abre una tarjeta con:</p>
+  <ul class="pasos">
+    <li><b class="n">a</b><p>Un <b>resumen cortito</b> para saber de qué va.</p></li>
+    <li><b class="n">b</b><p>Cuántas <b>páginas</b> tiene y en qué <b>casa</b> está.</p></li>
+    <li><b class="n">c</b><p>Si está <b>en casa</b> o si está <b>prestado</b>.</p></li>
+  </ul>
+  <img class="foto" src="pedir.png" style="width:120mm;align-self:center">
+  <p class="muted" style="text-align:center">Si en la portada ves <span class="etiqueta">Prestado · 26/11</span>, otra familia lo está leyendo. Volverá hacia esa fecha.</p>
+  <span class="num">4</span>
+</section>
+
+<!-- 5. Pedir un libro -->
+<section class="pag">
+  <h2><span class="bola" style="background:var(--amarillo)">3</span>Pedir un libro prestado</h2>
+  <div class="tarjeta" style="--c:var(--naranja)">
+    <p><b>Esto lo hacéis con una persona adulta de tu familia.</b> Ella tiene la cuenta para entrar en <span class="boton sec">Entrar · familias</span>.</p>
+  </div>
+  <ul class="pasos">
+    <li><b class="n">1</b><p>Elegís el libro y pulsáis <span class="boton">¿Me lo prestas?</span></p></li>
+    <li><b class="n">2</b><p>La familia que lo tiene recibe un aviso y dice <b>«Aceptar»</b>.</p></li>
+    <li><b class="n">3</b><p>Os dan el libro: en el cole, en el parque o en casa.</p></li>
+    <li><b class="n">4</b><p>Vuestra persona adulta pulsa <b>«Lo tenemos»</b>. ¡Ya es tuyo durante <b>3 semanas</b>!</p></li>
+  </ul>
+  <div class="tarjeta" style="--c:var(--lila)">
+    <p><b>¿Está prestado?</b> Pulsad <span class="boton sec">Avísame cuando vuelva</span> y os llegará un aviso cuando esté libre.</p>
+  </div>
+  <span class="num">5</span>
+</section>
+
+<!-- 6. Cuidar y devolver -->
+<section class="pag">
+  <h2><span class="bola" style="background:var(--lila)">4</span>Cuidar y devolver</h2>
+  <p class="grande">Un libro prestado es un tesoro de otra persona. Trátalo como si fuera tuyo... ¡o mejor!</p>
+  <div class="reglas">
+    <div class="regla" style="--c:var(--rosa)"><svg width="44" height="44" viewBox="0 0 44 44"><rect x="8" y="6" width="28" height="34" rx="3" fill="#74c0fc"/><path d="M14 14h16M14 20h16M14 26h10" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>
+      <p>Usa un <b>marcapáginas</b>. No dobles las esquinas.</p></div>
+    <div class="regla" style="--c:var(--azul)"><svg width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="17" fill="none" stroke="#e03131" stroke-width="4"/><path d="M10 34 34 10" stroke="#e03131" stroke-width="4"/><path d="M17 15c4 3 4 9 0 14" stroke="#7a6350" stroke-width="3" fill="none"/></svg>
+      <p>Lejos de la <b>comida</b>, el agua y el barro.</p></div>
+    <div class="regla" style="--c:var(--verde)"><svg width="44" height="44" viewBox="0 0 44 44"><path d="M10 16h24l-2 22H12z" fill="#ffc078"/><path d="M16 16v-4a6 6 0 0 1 12 0v4" stroke="#a8703f" stroke-width="3" fill="none"/></svg>
+      <p>Llévalo en una <b>bolsa</b> para que no se moje ni se doble.</p></div>
+    <div class="regla" style="--c:var(--amarillo)"><svg width="44" height="44" viewBox="0 0 44 44"><path d="M8 34 L30 12 L34 16 L12 38 L6 40Z" fill="#b197fc"/></svg>
+      <p>No pintes ni escribas dentro.</p></div>
+  </div>
+  <div class="tarjeta" style="--c:var(--verde)">
+    <p class="grande"><b>¿Lo has terminado?</b> Devuélvelo a tiempo.</p>
+    <p>Tu familia pulsa <b>«Ya lo hemos devuelto»</b> y la otra familia confirma <b>«Ya lo tengo de vuelta»</b>. ¿Necesitas más tiempo? Se pueden pedir <b>2 semanas más</b>.</p>
+    <p class="muted">Si se rompe o se pierde, no pasa nada por decirlo: cuéntaselo a tu familia enseguida.</p>
+  </div>
+  <span class="num">6</span>
+</section>
+
+<!-- 7. Palabras y despedida -->
+<section class="pag">
+  <h2><span class="bola" style="background:var(--rosa)">!</span>Palabras de la estantería</h2>
+  <div class="glosario">
+    <div><b>En casa</b> — el libro está en su estantería y se puede pedir.</div>
+    <div><b>Prestado</b> — otra familia lo está leyendo. Pone hacia cuándo vuelve.</div>
+    <div><b>Pedido por una familia</b> — alguien lo ha pedido y está esperando.</div>
+    <div><b>Solo para mirar</b> — esa estantería enseña sus libros, pero no los presta.</div>
+    <div><b>Avísame cuando vuelva</b> — te avisa cuando un libro prestado vuelve a estar libre.</div>
+  </div>
+  <div class="fila" style="margin-top:auto;justify-content:center">
+    <div class="bocadillo" style="font-size:24pt">¡Feliz lectura!<br><span class="muted" style="font-size:15pt;font-weight:400">Cuantos más libros compartimos, más historias leemos.</span></div>
+    <svg viewBox="0 0 120 120" width="190" height="190"><use href="#buho"/></svg>
+  </div>
+  <span class="num">7</span>
+</section>
+
+</body>
+</html>

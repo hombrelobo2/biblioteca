@@ -20,6 +20,7 @@ app/
   importar.py            Importa una estantería antigua (libros.json + portadas)
   templates/             Plantillas Jinja de /admin y /cuenta
 deploy/                  nginx, systemd y copia diaria
+docs/guia/               Fuente de la guía para niños (HTML) y generar.js, que crea docs/guia-para-ninos.pdf
 install.sh               Instalación o actualización en Debian 13
 actualizar.sh            Descarga la última versión de GitHub y ejecuta install.sh
 proxmox/estanteria.sh    Crea el LXC en Proxmox y lo instala
