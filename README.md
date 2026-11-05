@@ -27,7 +27,8 @@ Pensada para instalarse en casa, en un contenedor LXC de **Proxmox VE**, con un 
 - **Resúmenes para niños** escritos por la IA a partir de la sinopsis de la editorial, marcados como «sin revisar» hasta que los revisas.
 - **Completar datos que faltan** de los libros ya guardados, con coincidencia estricta para no mezclar libros.
 - **Familias** por invitación (un enlace de un solo uso), **préstamos** con estadísticas y resolución de desacuerdos.
-- **Copias de seguridad**: diaria en el contenedor, antes de cada actualización, semanal por Telegram y descarga en .zip desde el panel.
+- **Copias de seguridad**: diaria en el contenedor, antes de cada actualización, semanal por Telegram y descarga en .zip desde el panel. Se pueden **importar** desde el panel.
+- **Actualizaciones desde la web**: avisa cuando hay versión nueva en GitHub y se instala con un botón.
 
 <p align="center">
   <img src="docs/img/mi-cuenta.png" width="420" alt="Mi cuenta">
@@ -85,6 +86,8 @@ El instalador te pide la contraseña de administración. Ocupa el puerto 80 con 
 5. **Invita a las familias** desde /admin → Familias: cada una recibe un enlace para elegir su contraseña.
 
 ## Actualizar
+
+**Desde la web:** `/admin` → **Actualizar**. Ahí ves la versión instalada, la última publicada y sus novedades, y la instalas con un botón. Si tienes Telegram vinculado, te avisa cuando sale una versión nueva.
 
 Desde el host de Proxmox (cambia `112` por el número de tu contenedor):
 

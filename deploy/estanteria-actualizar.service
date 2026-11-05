@@ -1,0 +1,10 @@
+[Unit]
+Description=Nuestra Estantería: instalar la última versión de GitHub
+After=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/estanteria/estanteria.env
+ExecStartPre=/bin/rm -f /var/lib/estanteria/actualizar-ahora
+ExecStart=/bin/sh -c '{ date "+Empieza: %%F %%T"; /usr/local/sbin/estanteria-actualizar; echo "FIN $$?"; } > /var/lib/estanteria/actualizacion.log 2>&1; chmod 644 /var/lib/estanteria/actualizacion.log'
+TimeoutStartSec=30min

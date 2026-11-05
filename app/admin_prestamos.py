@@ -18,8 +18,15 @@ def db():
 
 
 def _requiere_admin(f):
-    from estanteria import requiere_admin
-    return requiere_admin(f)
+    """Como estanteria.requiere_admin, pero sin importar estanteria al cargar este módulo
+    (así lo pueden usar también tareas.py y el bot)."""
+    from functools import wraps
+
+    @wraps(f)
+    def envoltura(*a, **kw):
+        from estanteria import requiere_admin
+        return requiere_admin(f)(*a, **kw)
+    return envoltura
 
 
 @bp.before_app_request

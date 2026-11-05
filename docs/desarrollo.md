@@ -15,7 +15,8 @@ app/
   ia.py                  Gemini: leer fotos de lomos y escribir resúmenes
   telegram.py            Envío de mensajes a Telegram
   bot.py                 Bot de Telegram (long polling), servicio estanteria-bot
-  tareas.py              Recordatorios diarios y copia semanal, estanteria-tareas.timer
+  tareas.py              Recordatorios diarios, copia semanal y aviso de versión nueva, estanteria-tareas.timer
+  sistema.py             /admin/actualizar: versión instalada, versión en GitHub e instalación
   importar.py            Importa una estantería antigua (libros.json + portadas)
   templates/             Plantillas Jinja de /admin y /cuenta
 deploy/                  nginx, systemd y copia diaria
@@ -62,6 +63,12 @@ cd app && flask --app estanteria run --port 8000
 - Administración en <http://127.0.0.1:8000/admin/> (contraseña `prueba123`).
 - La página pública la sirve nginx en producción. Para verla en local, ábrela con cualquier servidor estático que pase `/libros.json`, `/resumenes.json`, `/portadas/` y `/cuenta` al puerto 8000.
 - Sin `TELEGRAM_BOT_TOKEN` los avisos simplemente no se envían.
+
+## Publicar una versión
+
+1. Sube el número en `VERSION` (por ejemplo `1.2.0`).
+2. Añade arriba en `CHANGELOG.md` una sección `## 1.2.0 — AAAA-MM-DD` con una línea por novedad que empiece por `- `. Es lo que ven los administradores antes de actualizar, así que escríbelas para ellos.
+3. Súbelo a `main`. Las instalaciones lo verán en `/admin` → Actualizar (como mucho 6 horas después, o al pulsar «Buscar ahora»).
 
 ## Contribuir
 

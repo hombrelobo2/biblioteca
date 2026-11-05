@@ -92,8 +92,13 @@ def token_csrf():
 app.jinja_env.globals["csrf"] = token_csrf
 
 
+MAX_RESTAURAR = 500 * 1024 * 1024
+
+
 @app.before_request
 def comprobar_csrf():
+    if request.endpoint == "copia_restaurar":
+        request.max_content_length = MAX_RESTAURAR   # la copia .zip lleva todas las portadas
     if request.method == "POST" and request.endpoint != "login":
         enviado = request.form.get("csrf") or request.headers.get("X-CSRF") or ""
         if not session.get("csrf") or not hmac.compare_digest(enviado, session["csrf"]):
@@ -690,8 +695,98 @@ def copia():
                     headers={"Content-Disposition": 'attachment; filename="%s"' % nombre})
 
 
+def _es_sqlite(ruta):
+    with open(ruta, "rb") as f:
+        return f.read(16) == b"SQLite format 3\x00"
+
+
+@app.post("/admin/copia/restaurar")
+@requiere_admin
+def copia_restaurar():
+    """Importa una copia: el .zip del botón «Descargar copia», o la base de datos sola (.db o .db.gz, la de Telegram)."""
+    import gzip
+    import shutil
+    import tempfile
+    import zipfile
+    archivo = request.files.get("copia")
+    if not archivo or not archivo.filename:
+        flash("Elige el archivo de la copia.")
+        return redirect(url_for("panel") + "#copia")
+    if not request.form.get("confirmar"):
+        flash("Marca la casilla para confirmar que quieres sustituir los datos actuales.")
+        return redirect(url_for("panel") + "#copia")
+    tmp = tempfile.mkdtemp()
+    try:
+        subida = os.path.join(tmp, "subida")
+        archivo.save(subida)
+        ruta_db, portadas = None, []
+        nombre = archivo.filename.lower()
+        if zipfile.is_zipfile(subida):
+            with zipfile.ZipFile(subida) as z:
+                nombres = z.namelist()
+                if "estanteria.db" not in nombres:
+                    raise ValueError("El .zip no tiene estanteria.db. ¿Es una copia de Nuestra Estantería?")
+                ruta_db = os.path.join(tmp, "estanteria.db")
+                with z.open("estanteria.db") as a, open(ruta_db, "wb") as b:
+                    shutil.copyfileobj(a, b)
+                for n in nombres:
+                    base = os.path.basename(n)
+                    if (n.startswith("portadas/") and base and not base.startswith(".")
+                            and re.fullmatch(r"[\w.-]+\.(jpe?g|png|webp|gif)", base, re.I)):
+                        portadas.append((n, base))
+                if portadas:
+                    carpeta = os.path.join(tmp, "portadas")
+                    os.makedirs(carpeta)
+                    for n, base in portadas:
+                        with z.open(n) as a, open(os.path.join(carpeta, base), "wb") as b:
+                            shutil.copyfileobj(a, b)
+        elif nombre.endswith(".gz"):
+            ruta_db = os.path.join(tmp, "estanteria.db")
+            with gzip.open(subida) as a, open(ruta_db, "wb") as b:
+                shutil.copyfileobj(a, b)
+        else:
+            ruta_db = subida
+        if not _es_sqlite(ruta_db):
+            raise ValueError("El archivo no es una copia válida (se espera .zip, .db o .db.gz).")
+        origen = sqlite3.connect(ruta_db)
+        try:
+            tablas = {r[0] for r in origen.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
+            if not {"bibliotecas", "libros"} <= tablas:
+                raise ValueError("Esa base de datos no es de Nuestra Estantería.")
+            if origen.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
+                raise ValueError("La copia está dañada (falla la comprobación de SQLite).")
+            n_libros = origen.execute("SELECT COUNT(*) FROM libros").fetchone()[0]
+            # Antes de sustituir nada: copia de lo que hay ahora
+            seguridad = os.path.join(DATA, "copias")
+            os.makedirs(seguridad, exist_ok=True)
+            antes = os.path.join(seguridad, "antes-de-restaurar-%s.db" % time.strftime("%Y-%m-%d-%H%M%S"))
+            destino = sqlite3.connect(antes)
+            db().backup(destino)
+            destino.close()
+            for viejo in sorted(f for f in os.listdir(seguridad) if f.startswith("antes-de-restaurar-"))[:-5]:
+                os.remove(os.path.join(seguridad, viejo))
+            # Sustituir la base de datos en uso (copia página a página, segura aunque haya otras conexiones)
+            origen.backup(db())
+        finally:
+            origen.close()
+        iniciar_db()   # por si la copia es de una versión anterior: añade tablas y columnas nuevas
+        copiadas = 0
+        for _, base in portadas:
+            shutil.copyfile(os.path.join(tmp, "portadas", base), os.path.join(PORTADAS, base))
+            copiadas += 1
+        session["admin_ver"] = ajuste(db(), "admin_ver")   # seguir dentro aunque la copia traiga otra contraseña
+        flash("Copia importada: %d libros%s. Lo que había antes está guardado en %s."
+              % (n_libros, (" y %d portadas" % copiadas) if copiadas else " (sin portadas: solo la base de datos)", antes))
+    except (ValueError, zipfile.BadZipFile, OSError, EOFError, sqlite3.DatabaseError) as e:
+        flash("No se ha podido importar: %s" % e)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return redirect(url_for("panel") + "#copia")
+
+
 @app.errorhandler(400)
 @app.errorhandler(404)
+@app.errorhandler(413)
 @app.errorhandler(429)
 def error(e):
     return render_template("error.html", e=e), e.code
@@ -702,9 +797,11 @@ iniciar_db()
 # Zona de familias (/cuenta) y administración de familias y préstamos (/admin/familias, /admin/prestamos)
 import cuenta  # noqa: E402
 import admin_prestamos  # noqa: E402
+import sistema  # noqa: E402
 
 app.register_blueprint(cuenta.bp)
 app.register_blueprint(admin_prestamos.bp)
+app.register_blueprint(sistema.bp)
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=8000, debug=False)

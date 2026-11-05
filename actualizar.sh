@@ -6,9 +6,15 @@
 set -euo pipefail
 REPO="${ESTANTERIA_REPO:-hombrelobo2/biblioteca}"
 RAMA="${ESTANTERIA_RAMA:-main}"
+# Todo va entre llaves para que bash lo lea entero antes de empezar
+# (install.sh sustituye este mismo archivo mientras se ejecuta)
+{
 [ "$(id -u)" -eq 0 ] || { echo "Ejecuta como root."; exit 1; }
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 echo "==> Descargando $REPO ($RAMA)"
 curl -fsSL "https://github.com/$REPO/archive/refs/heads/$RAMA.tar.gz" | tar -xz -C "$TMP" --strip-components=1
-bash "$TMP/install.sh"
+echo "==> Versión $(cat "$TMP/VERSION" 2>/dev/null || echo '?')"
+bash "$TMP/install.sh" </dev/null
+exit $?
+}

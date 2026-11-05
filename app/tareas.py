@@ -3,6 +3,7 @@
   python3 tareas.py diario         recordatorios + (los domingos) copia de la base de datos por Telegram
   python3 tareas.py recordatorios  solo los recordatorios
   python3 tareas.py copia          manda ahora la copia de la base de datos al Telegram de la administración
+  (diario también mira si hay una versión nueva en GitHub y lo avisa una vez por Telegram)
 
 Recordatorios:
   · a quien tiene el libro: 3 días antes y el día que vence
@@ -144,6 +145,20 @@ def copia(con):
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def aviso_version(con):
+    """Si hay una versión nueva en GitHub, avisa una vez al Telegram de la administración."""
+    import sistema
+    ultima, error = sistema.comprobar(con, forzar=True)
+    if error or not sistema.es_mas_nueva(ultima) or ajuste(con, "version_avisada") == ultima:
+        return
+    chat = ajuste(con, "telegram_admin_chat")
+    if chat and telegram.enviar(chat, "🎉 Hay una versión nueva de Nuestra Estantería: <b>%s</b> (tienes la %s).\n"
+                                      "Instálala desde /admin → Actualizar." % (telegram.esc(ultima), sistema.version_instalada())):
+        from basedatos import poner_ajuste
+        poner_ajuste(con, "version_avisada", ultima)
+        log("Aviso de versión nueva enviado: %s" % ultima)
+
+
 def main(argv):
     orden = argv[1] if len(argv) > 1 else "diario"
     iniciar_db()
@@ -152,6 +167,11 @@ def main(argv):
         recordatorios(con)
     if orden == "copia" or (orden == "diario" and date.today().weekday() == 6):
         copia(con)
+    if orden == "diario":
+        try:
+            aviso_version(con)
+        except Exception as e:  # noqa: BLE001  (que un fallo aquí no pare lo demás)
+            log("Comprobar versión: %r" % e)
     con.close()
     return 0
 

@@ -71,6 +71,7 @@ details summary{cursor:pointer;font-weight:700}
   <a href="{{ url_for('colecciones') }}" {% if request.endpoint == 'colecciones' %}aria-current="page"{% endif %}>Colecciones</a>
   <a href="{{ url_for('adminp.prestamos') }}" {% if request.endpoint == 'adminp.prestamos' %}aria-current="page"{% endif %}>Préstamos{% if g.get('disputas') %} <span class="tag warn">{{ g.disputas }}</span>{% endif %}</a>
   <a href="{{ url_for('adminp.familias') }}" {% if request.endpoint in ('adminp.familias','adminp.familia') %}aria-current="page"{% endif %}>Familias</a>
+  <a href="{{ url_for('sistema.actualizar') }}" {% if request.endpoint == 'sistema.actualizar' %}aria-current="page"{% endif %}>{% if g.get('version_nueva') %}🎉 Versión {{ g.version_nueva }}{% else %}Actualizar{% endif %}</a>
   <a href="/" target="_blank" rel="noopener">Ver estantería ↗</a>
   <form method="post" action="{{ url_for('salir') }}" style="margin:0"><input type="hidden" name="csrf" value="{{ csrf() }}"><button class="btn small">Salir</button></form>
 </div></div>

@@ -38,7 +38,7 @@ id estanteria >/dev/null 2>&1 || useradd --system --home "$DATA" --shell /usr/sb
 mkdir -p "$APP" "$DATA/portadas" "$ETC" /var/backups/estanteria
 rm -rf "$APP/app" "$APP/public"
 cp -r "$ORIGEN/app" "$ORIGEN/public" "$APP/"
-cp "$ORIGEN/requirements.txt" "$APP/"
+cp "$ORIGEN/requirements.txt" "$ORIGEN/VERSION" "$ORIGEN/CHANGELOG.md" "$APP/"
 chown -R root:root "$APP"
 chown -R estanteria:estanteria "$DATA"
 chmod 750 "$DATA"
@@ -112,11 +112,12 @@ fi
 
 echo "==> Servicios"
 cp "$ORIGEN/deploy/estanteria.service" "$ORIGEN/deploy/estanteria-bot.service" \
-   "$ORIGEN/deploy/estanteria-tareas.service" "$ORIGEN/deploy/estanteria-tareas.timer" /etc/systemd/system/
+   "$ORIGEN/deploy/estanteria-tareas.service" "$ORIGEN/deploy/estanteria-tareas.timer" \
+   "$ORIGEN/deploy/estanteria-actualizar.service" "$ORIGEN/deploy/estanteria-actualizar.path" /etc/systemd/system/
 systemctl daemon-reload
-systemctl enable -q estanteria estanteria-bot estanteria-tareas.timer
+systemctl enable -q estanteria estanteria-bot estanteria-tareas.timer estanteria-actualizar.path
 systemctl restart estanteria estanteria-bot
-systemctl start estanteria-tareas.timer
+systemctl start estanteria-tareas.timer estanteria-actualizar.path
 
 echo "==> nginx"
 cp "$ORIGEN/deploy/estanteria-proxy.conf" /etc/nginx/estanteria-proxy.conf
@@ -125,12 +126,8 @@ if [ ! -f /etc/nginx/sites-available/estanteria ]; then
   cp "$ORIGEN/deploy/nginx-estanteria.conf" /etc/nginx/sites-available/estanteria
 else
   echo "    /etc/nginx/sites-available/estanteria ya existe: se conserva (por si lo has cambiado)."
-  if ! grep -q 'location /cuenta' /etc/nginx/sites-available/estanteria; then
-    # Versión nueva: añadir la zona de familias (/cuenta) justo antes de /admin
-    cp /etc/nginx/sites-available/estanteria /etc/nginx/sites-available/estanteria.antes-de-prestamos
-    python3 "$ORIGEN/deploy/nginx-anadir-cuenta.py" /etc/nginx/sites-available/estanteria
-    echo "    Añadida la zona de familias (/cuenta) a la configuración de nginx."
-  fi
+  # Lo que necesitan las versiones nuevas (/cuenta, subir copias grandes); guarda el original si cambia algo
+  python3 "$ORIGEN/deploy/nginx-actualizar.py" /etc/nginx/sites-available/estanteria
 fi
 ln -sf /etc/nginx/sites-available/estanteria /etc/nginx/sites-enabled/estanteria
 rm -f /etc/nginx/sites-enabled/default
@@ -150,7 +147,7 @@ else
 fi
 IP=$(hostname -I | awk '{print $1}')
 echo
-echo "Nuestra Estantería está $OK."
+echo "Nuestra Estantería $(cat "$APP/VERSION") está $OK."
 echo "  Estantería para las familias:  http://$IP/"
 echo "  Administración (solo tú):      http://$IP/admin/"
 echo "  Cuentas de familia:            http://$IP/cuenta/"

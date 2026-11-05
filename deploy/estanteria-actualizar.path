@@ -1,0 +1,9 @@
+[Unit]
+Description=Nuestra Estantería: actualizar cuando se pide desde /admin
+
+[Path]
+PathExists=/var/lib/estanteria/actualizar-ahora
+Unit=estanteria-actualizar.service
+
+[Install]
+WantedBy=multi-user.target

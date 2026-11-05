@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block titulo %}Actualizar{% endblock %}
+{% block css %}
+pre.log{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:10px 12px;max-height:340px;overflow:auto;font-size:13px;line-height:1.4;white-space:pre-wrap;margin:0}
+.nov h3{margin-top:6px}
+.nov ul{margin:6px 0 0;padding-left:22px}
+{% endblock %}
+{% block cuerpo %}
+<h1>Versión y actualizaciones</h1>
+
+<div class="card">
+  <p>Versión instalada: <b>{{ instalada }}</b></p>
+  <p>Última publicada en <a href="https://github.com/{{ repo }}" rel="noopener">GitHub</a>: <b>{{ ultima or '—' }}</b>
+    <span class="muted">· comprobado el {{ comprobada }}</span></p>
+  <p><a class="btn small" href="{{ url_for('sistema.actualizar', buscar=1) }}">🔄 Buscar ahora</a></p>
+</div>
+
+{% if en_marcha %}
+<div class="card" id="marcha">
+  <h2>Actualizando…</h2>
+  <p class="muted" id="estado">No cierres esta página. La web se reinicia al final: puede dejar de responder unos segundos.</p>
+  <pre class="log" id="log">{{ log }}</pre>
+</div>
+{% elif atascada %}
+<div class="card" style="border-color:var(--warn);border-width:2px">
+  <h2>La actualización no ha empezado</h2>
+  <p>Esta instalación todavía no tiene el servicio que instala desde la web (llegó en la versión 1.1.0). Hazlo esta vez a mano: en el contenedor ejecuta <code>estanteria-actualizar</code>, o en el host de Proxmox el comando de actualizar del <a href="https://github.com/{{ repo }}#actualizar" rel="noopener">README</a>. A partir de ahí ya podrás hacerlo desde aquí.</p>
+</div>
+{% elif nueva %}
+<div class="card" style="border-color:var(--ok);border-width:2px">
+  <h2>🎉 Hay una versión nueva: {{ ultima }}</h2>
+  {% if novedades %}<div class="nov">{% for v, texto in novedades %}<h3>{{ v }}</h3>
+    <ul>{% for linea in texto.splitlines() if linea.strip().startswith('-') %}<li>{{ linea.strip()[1:].strip() }}</li>{% endfor %}</ul>{% endfor %}</div>{% endif %}
+  <p class="muted">Se conservan los libros, las portadas, las familias, los préstamos, las contraseñas y la configuración. Antes de empezar se guarda una copia de la base de datos.</p>
+  <form method="post"><input type="hidden" name="csrf" value="{{ csrf() }}"><button class="btn solid">Instalar la versión {{ ultima }}</button></form>
+</div>
+{% else %}
+<div class="card"><p>✅ Tienes la última versión.</p></div>
+{% endif %}
+
+{% if log and not en_marcha %}
+<div class="card"><details><summary>Registro de la última actualización</summary><pre class="log" style="margin-top:10px">{{ log }}</pre></details></div>
+{% endif %}
+{% endblock %}
+{% block js %}
+{% if en_marcha %}
+<script>
+(function(){
+  var log = document.getElementById("log"), est = document.getElementById("estado");
+  function mirar(){
+    fetch("{{ url_for('sistema.estado') }}", { cache: "no-store", credentials: "same-origin" })
+      .then(function(r){ if (!r.ok) throw 0; return r.json(); })
+      .then(function(j){
+        log.textContent = j.log; log.scrollTop = log.scrollHeight;
+        if (j.terminado) {
+          est.textContent = j.ok ? "✅ Actualizada a la versión " + j.version + "." : "⚠️ La actualización ha fallado. Mira el registro. Tus datos no se han tocado.";
+          setTimeout(function(){ location.href = "{{ url_for('sistema.actualizar') }}"; }, j.ok ? 2500 : 8000);
+        } else if (j.atascada) { location.reload(); }
+        else setTimeout(mirar, 2000);
+      })
+      .catch(function(){ est.textContent = "Reiniciando la web…"; setTimeout(mirar, 3000); });
+  }
+  setTimeout(mirar, 1500);
+})();
+</script>
+{% endif %}
+{% endblock %}

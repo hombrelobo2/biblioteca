@@ -12,6 +12,7 @@
 | Portadas | Una imagen por libro, tal como llega de la librería | `/var/lib/estanteria/portadas/` |
 | Configuración | Claves y opciones ([ver](configuracion.md)) | `/etc/estanteria/estanteria.env` |
 | Copias | Diarias (14 días) y antes de cada actualización (10 últimas) | `/var/backups/estanteria/` |
+| Actualizador | Instala la versión nueva cuando lo pides desde `/admin` → Actualizar | `estanteria-actualizar.path` y `.service` |
 
 Todo funciona con un usuario sin privilegios (`estanteria`). Con 512 MB de RAM y 4 GB de disco va sobrado: 250 libros con portada ocupan unos 15 MB.
 
@@ -63,6 +64,10 @@ Las copias de dentro del contenedor no te salvan si se rompe el disco: haz tambi
 
 ### Restaurar
 
+**Desde la web (lo más fácil):** en el panel de `/admin` → Copia de seguridad → «Importar una copia de seguridad». Sirve el .zip descargado del panel (base de datos y portadas) o la base de datos sola (`.db`, o el `.db.gz` que llega por Telegram). Se sustituyen todos los datos por los de la copia; lo que había se guarda antes en `/var/lib/estanteria/copias/` (las 5 últimas).
+
+**A mano, dentro del contenedor:**
+
 ```bash
 systemctl stop estanteria estanteria-bot
 cp /var/backups/estanteria/estanteria-AAAA-MM-DD.db /var/lib/estanteria/estanteria.db
@@ -72,6 +77,14 @@ systemctl start estanteria estanteria-bot
 ```
 
 La copia que llega por Telegram viene comprimida: `gunzip estanteria-AAAA-MM-DD.db.gz` antes de copiarla.
+
+## Actualizaciones
+
+En `/admin` → **Actualizar** ves la versión instalada y la última publicada en GitHub, con sus novedades (sale de [`CHANGELOG.md`](../CHANGELOG.md)). Al pulsar «Instalar», la web deja un aviso y el servicio `estanteria-actualizar` (que es el que tiene permisos de root) descarga la versión nueva y ejecuta `install.sh`. En la misma página ves el registro en directo. La web se reinicia al final.
+
+Las tareas diarias miran si hay versión nueva y avisan una vez al Telegram de la administración.
+
+Para usar tu propio fork, pon `ESTANTERIA_REPO=tu-usuario/tu-repo` en el `.env`.
 
 ## Comandos útiles (dentro del contenedor)
 

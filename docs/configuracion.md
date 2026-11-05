@@ -15,6 +15,7 @@ systemctl restart estanteria estanteria-bot
 | `GOOGLE_BOOKS_KEY` | Clave de la *Books API* de Google Cloud. Sin ella también funciona, pero con un límite diario pequeño (errores 429). | vacía |
 | `ESTANTERIA_PLAZO_DIAS` | Días que dura un préstamo. | `21` |
 | `ESTANTERIA_COOKIE_SECURE` | Déjalo en `0`. La cookie se marca como segura sola cuando la visita llega por HTTPS; con `1` no podrías entrar a `/admin` por `http://IP`. | `0` |
+| `ESTANTERIA_REPO` | Repositorio de GitHub del que se comprueban e instalan las actualizaciones (`usuario/repo`). | `hombrelobo2/biblioteca` |
 | `ESTANTERIA_DATA` | Carpeta de la base de datos y las portadas. | `/var/lib/estanteria` |
 | `ESTANTERIA_SECRET_KEY` | Clave para firmar las sesiones. La inventa el instalador; si la cambias, se cierran todas las sesiones. | aleatoria |
 | `ESTANTERIA_ADMIN_HASH` | Huella de la contraseña de administración inicial. Si la cambias desde la web, manda la de la web. | la del instalador |
