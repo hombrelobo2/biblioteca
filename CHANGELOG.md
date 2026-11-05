@@ -1,5 +1,9 @@
 # Novedades
 
+## 1.2.1 — 2026-11-05
+
+- Botón «☀️ Modo claro / 🌙 Modo oscuro» en la estantería (arriba) y al pie de «Mi cuenta» y la administración. Cada aparato recuerda lo que elijas.
+
 ## 1.2.0 — 2026-11-05
 
 - Nuevo aspecto más alegre para los niños: colores cálidos de papel, un búho lector en la portada, cada biblioteca en su tarjeta de color («La estantería de…») y una tabla de madera bajo cada colección.

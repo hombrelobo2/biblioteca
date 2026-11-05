@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Nuestra Estantería</title>
+<script>
+/* Modo claro / oscuro elegido con el botón (si no, el del aparato) */
+(function(){ try { var t = localStorage.getItem("tema"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch(e){} })();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600;700&display=swap">
@@ -115,6 +119,7 @@ button{cursor:pointer}
 .pie a{color:inherit;font-weight:700}
 .who{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:flex-end;font-size:15px;min-height:34px}
 .who a{color:inherit;font-weight:700}
+.who button.btnl{font:inherit;font-weight:700;color:inherit;cursor:pointer}
 .who .btnl{border:1.5px solid var(--btn);border-radius:999px;padding:5px 14px;text-decoration:none;background:var(--surface)}
 .who .badge{background:#c2255c;color:#fff;border-radius:999px;padding:1px 8px;font-size:13px;margin-left:4px;text-decoration:none}
 .ribbon{position:absolute;left:6px;right:6px;bottom:6px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:700;border-radius:999px;padding:3px 6px;text-align:center;line-height:1.2}
@@ -134,7 +139,7 @@ button{cursor:pointer}
 <body>
 <div id="app">
   <header class="head">
-    <div class="who" id="who"></div>
+    <div class="who"><span id="who" style="display:contents"></span><button class="btnl" id="tema" type="button">🌙 Modo oscuro</button></div>
     <div class="hero">
       <div>
         <h1>Nuestra Estantería</h1>
@@ -395,6 +400,20 @@ fetch("libros.json", { cache: "no-cache" }).then(function(r){
 }).catch(function(){
   $("list").innerHTML = '<p class="empty">No se ha podido cargar la lista de libros (libros.json). Comprueba que está en la misma carpeta que esta página.</p>';
 });
+})();
+</script>
+<script>
+(function(){
+  var b = document.getElementById("tema"); if (!b) return;
+  function oscuro(){ var t = document.documentElement.getAttribute("data-theme"); return t ? t === "dark" : !!(window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches); }
+  function pintar(){ b.textContent = oscuro() ? "☀️ Modo claro" : "🌙 Modo oscuro"; b.setAttribute("aria-label", b.textContent); }
+  b.addEventListener("click", function(){
+    var n = oscuro() ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", n);
+    try { localStorage.setItem("tema", n); } catch(e){}
+    pintar();
+  });
+  pintar();
 })();
 </script>
 </body>
