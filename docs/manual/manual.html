@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Nuestra Estantería · Manual de administración</title>
+<style>
+@page { size: A4; margin: 16mm 17mm 20mm; }
+@page :first { margin: 0; }
+:root{ --papel:#fbf3e4; --tinta:#3b2a1a; --suave:#6f5845; --linea:#ecd9bb; --naranja:#d9480f; --madera1:#d39a62; --madera2:#a8703f;
+       --rosa:#ff8fab; --azul:#74c0fc; --verde:#8ce99a; --amarillo:#ffc078; --lila:#b197fc; }
+*{ box-sizing:border-box; }
+html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+body{ margin:0; font-family:"Inter",sans-serif; color:var(--tinta); font-size:10.6pt; line-height:1.5; }
+h1,h2,h3{ font-family:"Inter Display","Inter",sans-serif; margin:0; line-height:1.15; }
+h2{ font-size:21pt; font-weight:800; display:flex; align-items:center; gap:4mm; margin:0 0 4mm; padding-bottom:3mm; border-bottom:1.2mm solid var(--madera1); }
+h2 .n{ flex:none; width:10mm; height:10mm; border-radius:50%; display:inline-grid; place-items:center; font-size:13pt; background:var(--c,var(--amarillo)); }
+h3{ font-size:13pt; font-weight:700; margin:5mm 0 2mm; }
+p{ margin:0 0 2.6mm; }
+ul,ol{ margin:0 0 3mm; padding-left:6mm; }
+li{ margin-bottom:1.2mm; }
+a{ color:var(--naranja); }
+code{ font-family:"DejaVu Sans Mono",monospace; font-size:9pt; background:#f4e7d1; padding:0.2mm 1.2mm; border-radius:1mm; }
+pre{ font-family:"DejaVu Sans Mono",monospace; font-size:8.6pt; line-height:1.45; background:#2b1d12; color:#f6ead8; padding:3.5mm 4.5mm; border-radius:3mm; margin:0 0 3.5mm; white-space:pre-wrap; word-break:break-all; break-inside:avoid; }
+pre .c{ color:#c9b39a; }
+.cap{ margin-top:9mm; }
+h2,h3{ break-after:avoid; }
+h3 + *{ break-before:avoid; }
+.salto{ break-before:page; margin-top:0; }
+.caja{ border-radius:3mm; padding:3.5mm 4.5mm; margin:0 0 3.5mm; break-inside:avoid; background:#fff; border-left:2mm solid var(--c,var(--azul)); }
+.caja p:last-child, .caja ul:last-child{ margin-bottom:0; }
+.caja b.t{ display:block; margin-bottom:1mm; }
+.ok{ --c:var(--verde); } .ojo{ --c:var(--naranja); background:#fff4ec; } .info{ --c:var(--azul); }
+table{ border-collapse:collapse; width:100%; margin:0 0 3.5mm; font-size:9.6pt; break-inside:avoid; }
+th,td{ text-align:left; padding:1.8mm 2.4mm; border-bottom:0.3mm solid var(--linea); vertical-align:top; }
+th{ font-size:8.2pt; text-transform:uppercase; letter-spacing:.05em; color:var(--suave); background:#f7ebd6; }
+td:first-child{ white-space:nowrap; }
+.foto{ display:block; width:100%; border-radius:3mm; border:0.6mm solid var(--linea); margin:1mm 0 4mm; box-shadow:0 1.5mm 4mm -2mm rgba(60,35,10,.4); break-inside:avoid; }
+.pasos{ list-style:none; padding:0; counter-reset:p; }
+.pasos li{ counter-increment:p; position:relative; padding-left:9mm; margin-bottom:2.2mm; }
+.pasos li::before{ content:counter(p); position:absolute; left:0; top:0; width:6.4mm; height:6.4mm; border-radius:50%; background:var(--naranja); color:#fff; font-weight:700; font-size:9pt; display:grid; place-items:center; }
+.dos{ display:grid; grid-template-columns:1fr 1fr; gap:4mm; }
+.boton{ display:inline-block; background:var(--tinta); color:#fff; border-radius:999px; padding:0 2.6mm; font-weight:700; font-size:9.2pt; white-space:nowrap; }
+.boton.sec{ background:#fff; color:var(--tinta); border:0.35mm solid var(--tinta); }
+/* Portada */
+.portada{ width:210mm; height:297mm; background:var(--papel) radial-gradient(#f0dfc1 1.3px, transparent 1.8px) 0 0/8mm 8mm; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:8mm; position:relative; padding:20mm; }
+.portada::after{ content:""; position:absolute; left:0; right:0; bottom:0; height:10mm; background:linear-gradient(var(--madera1),var(--madera2)); }
+.portada h1{ font-size:44pt; font-weight:800; }
+.portada .sub{ font-size:20pt; font-weight:700; color:var(--naranja); }
+.portada .ver{ color:var(--suave); font-size:12pt; }
+/* Índice */
+.indice{ list-style:none; padding:0; columns:2; column-gap:10mm; }
+.indice li{ padding:1.6mm 0; border-bottom:0.3mm dotted var(--linea); font-weight:600; break-inside:avoid; }
+.indice li span{ display:inline-block; width:8mm; color:var(--naranja); font-weight:800; }
+/* Esquema */
+.esquema{ display:flex; align-items:center; gap:2.5mm; flex-wrap:wrap; margin:2mm 0 4mm; break-inside:avoid; }
+.esquema div{ background:#fff; border:0.4mm solid var(--linea); border-radius:3mm; padding:2.5mm 3.5mm; font-size:9.4pt; text-align:center; border-top:1.6mm solid var(--c); }
+.esquema i{ font-style:normal; color:var(--suave); font-size:14pt; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute"><defs><g id="buho">
+  <ellipse cx="60" cy="112" rx="40" ry="6" fill="rgba(0,0,0,.12)"/>
+  <path d="M24 46 Q22 18 40 26 L60 34 L80 26 Q98 18 96 46 Q102 96 60 104 Q18 96 24 46Z" fill="#8a5a3b"/>
+  <path d="M36 64 Q60 52 84 64 Q86 96 60 98 Q34 96 36 64Z" fill="#f2d3a7"/>
+  <circle cx="44" cy="50" r="15" fill="#fff"/><circle cx="76" cy="50" r="15" fill="#fff"/>
+  <circle cx="46" cy="52" r="7" fill="#2b1d12"/><circle cx="74" cy="52" r="7" fill="#2b1d12"/>
+  <circle cx="48" cy="49" r="2.4" fill="#fff"/><circle cx="76" cy="49" r="2.4" fill="#fff"/>
+  <path d="M56 60 L64 60 L60 68Z" fill="#f59f00"/>
+  <path d="M30 80 L60 74 L90 80 L90 100 L60 94 L30 100Z" fill="#e8590c"/><path d="M60 74 L60 94" stroke="#fff" stroke-width="2"/>
+  <path d="M34 84 L56 80 M34 89 L56 85 M64 80 L86 84 M64 85 L86 89" stroke="#ffd8a8" stroke-width="2" stroke-linecap="round"/>
+</g></defs></svg>
+
+<!-- PORTADA -->
+<section class="portada">
+  <svg viewBox="0 0 120 120" width="230" height="230"><use href="#buho"/></svg>
+  <h1>Nuestra Estantería</h1>
+  <p class="sub">Manual de administración</p>
+  <p class="ver">Instalación, configuración y uso diario · versión 1.2<br>github.com/hombrelobo2/biblioteca</p>
+</section>
+
+<!-- ÍNDICE Y QUÉ ES -->
+<section>
+  <h2 style="--c:var(--rosa)"><span class="n">≡</span>Contenido</h2>
+  <ol class="indice">
+    <li><span>1</span>Cómo funciona</li>
+    <li><span>2</span>Instalar en Proxmox</li>
+    <li><span>3</span>Primer acceso</li>
+    <li><span>4</span>Publicarla en internet</li>
+    <li><span>5</span>El archivo de configuración</li>
+    <li><span>6</span>Avisos por Telegram</li>
+    <li><span>7</span>Gemini (IA) y Google Books</li>
+    <li><span>8</span>Añadir y cuidar los libros</li>
+    <li><span>9</span>Familias</li>
+    <li><span>10</span>Préstamos</li>
+    <li><span>11</span>Copias de seguridad</li>
+    <li><span>12</span>Actualizar</li>
+    <li><span>13</span>Comandos y problemas frecuentes</li>
+  </ol>
+
+  <h2 style="--c:var(--azul);margin-top:8mm"><span class="n">1</span>Cómo funciona</h2>
+  <p>Nuestra Estantería es una web para un grupo de familias. Cada familia enseña los libros que tiene en casa y se los pueden prestar entre ellas. Tiene tres zonas:</p>
+  <table>
+    <tr><th>Zona</th><th>Dirección</th><th>Quién la usa</th></tr>
+    <tr><td><b>Estantería</b></td><td><code>/</code></td><td>Todo el mundo. Muestra los libros y si están prestados (nunca quién los tiene).</td></tr>
+    <tr><td><b>Mi cuenta</b></td><td><code>/cuenta</code></td><td>Cada familia, con su usuario y contraseña: pedir libros, confirmar entregas y devoluciones.</td></tr>
+    <tr><td><b>Administración</b></td><td><code>/admin</code></td><td>Solo tú: libros, familias, préstamos, copias y actualizaciones.</td></tr>
+  </table>
+  <p>Todo vive dentro de un contenedor LXC de Proxmox, con estas piezas:</p>
+  <div class="esquema">
+    <div style="--c:var(--rosa)">Navegador<br>de las familias</div><i>→</i>
+    <div style="--c:var(--amarillo)">Tu proxy HTTPS<br>(Nginx Proxy Manager…)</div><i>→</i>
+    <div style="--c:var(--verde)"><b>Contenedor LXC</b><br>nginx · aplicación Python<br>SQLite · portadas</div><i>↔</i>
+    <div style="--c:var(--azul)">Telegram · Gemini<br>librerías online</div>
+  </div>
+  <ul>
+    <li><b>nginx</b> sirve la página pública y las portadas, y pasa lo demás a la aplicación.</li>
+    <li><b>La aplicación</b> (Flask) genera los datos, la zona de familias y la administración.</li>
+    <li><b>SQLite</b> guarda todo en un solo archivo: <code>/var/lib/estanteria/estanteria.db</code>.</li>
+    <li><b>El bot de Telegram</b> manda los avisos y recibe los botones. No necesita abrir puertos.</li>
+    <li><b>Las tareas diarias</b> (10:00) mandan recordatorios, la copia semanal y el aviso de versión nueva.</li>
+  </ul>
+  <div class="caja info"><b class="t">Qué necesitas</b>
+    <ul>
+      <li>Un servidor con <b>Proxmox VE 9</b>, o cualquier máquina con <b>Debian 13</b>. Basta con 1 núcleo, 512 MB de RAM y 4 GB de disco.</li>
+      <li>Para usarla desde fuera de casa: un <b>dominio</b> y un proxy con HTTPS (Nginx Proxy Manager, Cloudflare Tunnel…).</li>
+      <li>Opcional: una cuenta de <b>Telegram</b> (avisos) y una de <b>Google</b> (Gemini, para leer fotos y escribir resúmenes).</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 2 INSTALAR -->
+<section class="cap">
+  <h2 style="--c:var(--verde)"><span class="n">2</span>Instalar en Proxmox</h2>
+  <p>En la web de Proxmox, abre la consola del nodo (<b>Datacenter → tu nodo → Shell</b>) y pega:</p>
+  <pre>bash -c "$(curl -fsSL https://raw.githubusercontent.com/hombrelobo2/biblioteca/main/proxmox/estanteria.sh)"</pre>
+  <p>El script hace unas preguntas. Pulsa <b>Enter</b> para aceptar el valor que va entre corchetes:</p>
+  <table>
+    <tr><th>Pregunta</th><th>Qué poner</th></tr>
+    <tr><td>Número del contenedor</td><td>El primero libre (lo propone él).</td></tr>
+    <tr><td>Almacenamiento del disco</td><td>Normalmente <code>local-lvm</code> o <code>local-zfs</code>.</td></tr>
+    <tr><td>Disco, núcleos, memoria</td><td>Los valores propuestos (4 GB, 1 núcleo, 512 MB) sobran para cientos de libros.</td></tr>
+    <tr><td>IP</td><td><code>dhcp</code>, o mejor una fija como <code>192.168.1.50/24</code> para que el proxy la encuentre siempre.</td></tr>
+    <tr><td>Puerta de enlace y DNS</td><td>La de tu router (p. ej. <code>192.168.1.1</code>). El DNS vacío usa el del host.</td></tr>
+    <tr><td>Contraseñas</td><td>La de root del contenedor y la de administración de la web. Con Enter se inventa una.</td></tr>
+    <tr><td>Dirección pública, Telegram, Gemini</td><td>Opcionales: se pueden poner después (capítulos 5 a 7).</td></tr>
+  </table>
+  <p>Después, sin que hagas nada más:</p>
+  <ol class="pasos">
+    <li>Descarga la plantilla de <b>Debian 13</b> si no la tienes.</li>
+    <li>Crea el contenedor sin privilegios, con arranque automático y la zona horaria del host.</li>
+    <li>Instala nginx, Python, la aplicación, el bot, los recordatorios y las copias diarias.</li>
+    <li>Te muestra la dirección y las contraseñas. <b>Apúntalas</b>: no se vuelven a mostrar.</li>
+  </ol>
+  <pre><span class="c">🎉 Listo</span>
+   Estantería:       http://192.168.1.50/
+   Administración:   http://192.168.1.50/admin/
+   Contraseña admin: ********
+   Root del LXC:     ********   (entra con: pct enter 114)</pre>
+  <div class="caja ojo"><b class="t">Avisos de «locale» o «perl: warning»</b>
+    <p>Si usas una versión antigua del script pueden salir durante la instalación. Son inofensivos: solo dicen que el idioma del host no está instalado en el contenedor.</p></div>
+  <h3>Instalar sin Proxmox (cualquier Debian 13)</h3>
+  <pre>apt-get update && apt-get install -y curl
+curl -fsSL https://github.com/hombrelobo2/biblioteca/archive/refs/heads/main.tar.gz | tar -xz
+cd biblioteca-main && bash install.sh</pre>
+  <p>Te pide la contraseña de administración. La web queda en el puerto 80.</p>
+
+  <h2 style="--c:var(--amarillo);margin-top:7mm"><span class="n">3</span>Primer acceso</h2>
+  <ol class="pasos">
+    <li>Abre <code>http://IP-DEL-CONTENEDOR/admin/</code> y entra con la contraseña de administración.</li>
+    <li>Cámbiala si quieres en <b>Familias → Contraseña de administración</b> (abajo del todo).</li>
+    <li>Crea las bibliotecas: una por familia o por niño o niña, <b>solo con el nombre de pila</b>.</li>
+  </ol>
+  <div class="caja info"><b class="t">¿Has olvidado la contraseña de administración?</b>
+    <p>Entra en el contenedor (<code>pct enter 114</code>) y ejecuta <code>estanteria-cambiar-clave</code>.</p></div>
+</section>
+
+<!-- 4 PUBLICAR -->
+<section class="cap">
+  <h2 style="--c:var(--lila)"><span class="n">4</span>Publicarla en internet</h2>
+  <p>Para que las familias entren desde su casa, pon un proxy con HTTPS delante del contenedor.</p>
+  <h3>Con Nginx Proxy Manager</h3>
+  <ol class="pasos">
+    <li><b>Hosts → Proxy Hosts → Add Proxy Host.</b></li>
+    <li><i>Domain Names</i>: tu dominio (p. ej. <code>estanteria.midominio.com</code>). <i>Scheme</i>: <code>http</code>. <i>Forward Hostname / IP</i>: la IP del contenedor. <i>Port</i>: <code>80</code>. Marca <i>Block Common Exploits</i>.</li>
+    <li>Pestaña <b>SSL</b>: <i>Request a new SSL Certificate</i>, <i>Force SSL</i> y <i>HTTP/2 Support</i>.</li>
+    <li>Guarda y prueba la dirección desde el móvil con los datos (sin wifi).</li>
+  </ol>
+  <h3>Con Cloudflare Tunnel</h3>
+  <p>En <b>Zero Trust → Networks → Tunnels</b>, añade un <i>Public Hostname</i> con servicio <code>http://IP-DEL-CONTENEDOR:80</code>.</p>
+  <h3>Qué tiene que verse desde fuera</h3>
+  <table>
+    <tr><th>Ruta</th><th>¿Desde internet?</th></tr>
+    <tr><td><code>/</code>, <code>/libros.json</code>, <code>/resumenes.json</code>, <code>/portadas/</code></td><td>Sí: es la estantería.</td></tr>
+    <tr><td><code>/cuenta</code></td><td>Sí: las familias entran, piden y confirman.</td></tr>
+    <tr><td><code>/admin</code></td><td>Mejor no: solo desde tu red de casa.</td></tr>
+  </table>
+  <div class="caja ok"><b class="t">Dejar /admin solo para casa (Nginx Proxy Manager)</b>
+    <p>En tu Proxy Host, pestaña <b>Custom Locations</b>, añade la ubicación <code>/admin</code> hacia la misma IP y el puerto 80. Pulsa el engranaje ⚙ y escribe:</p>
+    <pre style="margin:2mm 0 0">allow 192.168.1.0/24;
+deny all;</pre>
+    <p style="margin-top:2mm">Desde casa sigues entrando con <code>http://IP-DEL-CONTENEDOR/admin/</code>.</p></div>
+  <p>Después, escribe la dirección pública en <code>ESTANTERIA_URL</code> (capítulo 5). Así los enlaces de invitación y los botones de Telegram llevan a la dirección buena.</p>
+  <div class="caja info"><b class="t">Cookies seguras</b>
+    <p>Deja <code>ESTANTERIA_COOKIE_SECURE=0</code>. La web marca la cookie como segura sola cuando llega por HTTPS, y así puedes seguir entrando por <code>http://IP</code> desde casa.</p></div>
+</section>
+
+<!-- 5 CONFIG -->
+<section class="cap">
+  <h2 style="--c:var(--rosa)"><span class="n">5</span>El archivo de configuración</h2>
+  <p>Las claves y opciones están en <code>/etc/estanteria/estanteria.env</code>, dentro del contenedor:</p>
+  <pre><span class="c"># 1. Desde el host de Proxmox, entra en el contenedor (cambia 114 por tu número)</span>
+pct enter 114
+<span class="c"># 2. Edita el archivo. Guarda con Ctrl+O y Enter; sal con Ctrl+X</span>
+nano /etc/estanteria/estanteria.env
+<span class="c"># 3. Reinicia para que se apliquen los cambios</span>
+systemctl restart estanteria estanteria-bot</pre>
+  <table>
+    <tr><th>Variable</th><th>Para qué sirve</th></tr>
+    <tr><td><code>ESTANTERIA_URL</code></td><td>Dirección pública con <code>https://</code>. Para invitaciones y Telegram.</td></tr>
+    <tr><td><code>TELEGRAM_BOT_TOKEN</code></td><td>Token del bot (capítulo 6). Vacío = sin avisos.</td></tr>
+    <tr><td><code>GEMINI_API_KEY</code></td><td>Clave de Gemini (capítulo 7). Activa la foto de lomos y los resúmenes.</td></tr>
+    <tr><td><code>GEMINI_MODEL</code></td><td>Opcional: modelo que se prueba primero. Si falla, prueba otros solo.</td></tr>
+    <tr><td><code>GOOGLE_BOOKS_KEY</code></td><td>Opcional: quita el límite diario de Google Books.</td></tr>
+    <tr><td><code>ESTANTERIA_PLAZO_DIAS</code></td><td>Días de préstamo. Por defecto 21.</td></tr>
+    <tr><td><code>ESTANTERIA_REPO</code></td><td>De qué repositorio de GitHub se actualiza. Por defecto el oficial.</td></tr>
+    <tr><td><code>ESTANTERIA_COOKIE_SECURE</code></td><td>Déjalo en 0 (ver capítulo 4).</td></tr>
+    <tr><td><code>ESTANTERIA_SECRET_KEY</code>, <code>ESTANTERIA_ADMIN_HASH</code></td><td>Los crea el instalador. No hace falta tocarlos.</td></tr>
+  </table>
+  <div class="caja ojo"><b class="t">Este archivo es privado</b>
+    <p>Contiene tus claves. No lo copies en chats, foros ni capturas. Si una clave se ve por error, créala de nuevo (en BotFather o en AI Studio) y sustituye la antigua.</p></div>
+
+  <h2 style="--c:var(--azul);margin-top:7mm"><span class="n">6</span>Avisos por Telegram</h2>
+  <p>Con Telegram, las familias reciben un aviso cuando les piden un libro, cuando se lo devuelven y antes de que venza un préstamo, con botones para confirmar sin abrir la web. Tú recibes los desacuerdos y una copia de la base de datos cada domingo.</p>
+  <h3>Crear el bot</h3>
+  <ol class="pasos">
+    <li>En Telegram, busca <b>@BotFather</b> (con la marca azul de verificado) y escribe <code>/newbot</code>.</li>
+    <li>Pon un nombre visible, p. ej. «Estantería del cole».</li>
+    <li>Pon un usuario que termine en <code>bot</code>, p. ej. <code>estanteria_del_cole_bot</code>.</li>
+    <li>BotFather te da el <b>token</b>, algo como <code>123456789:AAH…</code>. Cópialo.</li>
+    <li>Opcional: <code>/setuserpic</code> para ponerle foto y <code>/setdescription</code> para la descripción.</li>
+  </ol>
+  <h3>Configurarlo y vincularlo</h3>
+  <ol class="pasos">
+    <li>Pon el token en <code>TELEGRAM_BOT_TOKEN</code> y la dirección en <code>ESTANTERIA_URL</code>, y reinicia (capítulo 5).</li>
+    <li>En <b>/admin → Familias</b>, pulsa <span class="boton">Vincular mi Telegram</span> y después <b>Iniciar</b> en Telegram.</li>
+    <li>Pulsa <span class="boton sec">Enviar mensaje de prueba</span> para comprobarlo.</li>
+    <li>Cada familia vincula el suyo en <b>Mi cuenta → Vincular Telegram</b>.</li>
+  </ol>
+  <div class="caja ojo"><b class="t">Un bot solo para la estantería</b>
+    <p>La estantería le pregunta a Telegram por los mensajes nuevos. Si el bot lo usa otro programa o tiene un webhook, no funcionará: crea uno nuevo.</p></div>
+</section>
+
+<!-- 7 GEMINI -->
+<section class="cap">
+  <h2 style="--c:var(--lila)"><span class="n">7</span>Gemini (IA) y Google Books</h2>
+  <p>Gemini es la inteligencia artificial de Google. En la estantería se usa para dos cosas:</p>
+  <ul>
+    <li><b>Leer una foto de los lomos</b> y sacar la lista de títulos, autores, colecciones y números.</li>
+    <li><b>Escribir resúmenes para niños</b> de 2-3 líneas a partir de la sinopsis de la editorial.</li>
+  </ul>
+  <p>Sin Gemini todo lo demás funciona igual: escribes los títulos a mano y los resúmenes los escribes tú.</p>
+  <h3>Conseguir la clave (gratis)</h3>
+  <ol class="pasos">
+    <li>Entra en <b>aistudio.google.com/apikey</b> con una cuenta de Google.</li>
+    <li>Acepta las condiciones y pulsa <b>Create API key</b> (Crear clave de API).</li>
+    <li>Copia la clave, que empieza por <code>AIza…</code>.</li>
+    <li>Pégala en <code>GEMINI_API_KEY</code> y reinicia (capítulo 5). En <b>Nuevas entradas</b> aparecerá el botón <span class="boton sec">📷 Leer una foto de los lomos</span>.</li>
+  </ol>
+  <div class="caja info"><b class="t">Límites y privacidad</b>
+    <ul>
+      <li>La clave gratuita tiene un límite de usos por minuto y por día. Para una estantería familiar sobra. Si se acaba, espera un rato.</li>
+      <li>Solo se envían a Google las <b>fotos de los lomos</b> y las <b>sinopsis</b> de los libros. Nunca datos de familias ni de préstamos.</li>
+      <li>En el nivel gratuito, según las condiciones de Google, lo que se envía puede usarse para mejorar sus productos. No hagas fotos en las que salgan personas.</li>
+    </ul></div>
+  <h3>Google Books (opcional)</h3>
+  <p>Sin clave, Google Books permite pocas búsquedas al día. Si ves «Google Books: error 429», crea una clave:</p>
+  <ol class="pasos">
+    <li>Entra en <b>console.cloud.google.com</b> y crea un proyecto (p. ej. «estanteria»).</li>
+    <li>En <b>APIs y servicios → Biblioteca</b>, busca <b>Books API</b> y pulsa <b>Habilitar</b>.</li>
+    <li>En <b>Credenciales → Crear credenciales → Clave de API</b>, copia la clave.</li>
+    <li>Pégala en <code>GOOGLE_BOOKS_KEY</code> y reinicia.</li>
+  </ol>
+  <p>Las demás fuentes (Todostuslibros, Elkar y Open Library) no necesitan clave.</p>
+</section>
+
+<!-- 8 LIBROS -->
+<section class="cap">
+  <h2 style="--c:var(--amarillo)"><span class="n">8</span>Añadir y cuidar los libros</h2>
+  <img class="foto" src="nuevas2.png" style="width:78%;margin-inline:auto">
+  <h3>Nuevas entradas</h3>
+  <ol class="pasos">
+    <li>Elige la biblioteca, o escribe un nombre de pila para crear una nueva.</li>
+    <li>Escribe un libro por línea. Puedes añadir el autor así: <code>Gigantosaurio | Jonny Duddle</code>, o pegar el ISBN. También puedes leerlos de una foto de los lomos.</li>
+    <li>Pulsa <b>Buscar datos</b>. Se busca a la vez en <b>Todostuslibros</b>, <b>Elkar</b>, <b>Google Books</b> y <b>Open Library</b>. Si un libro sale en varias, se junta en un resultado con lo mejor de cada una.</li>
+    <li>Elige el resultado correcto de cada libro y corrige lo que quieras: colección, número, resumen…</li>
+    <li>Pulsa <b>Guardar en la estantería</b>. Las portadas se guardan en el contenedor tal como vienen.</li>
+  </ol>
+  <p>Si un libro ya está en esa biblioteca o lo has escrito dos veces, te avisa.</p>
+  <h3>Normas de la estantería</h3>
+  <ul>
+    <li><b>Nombres:</b> solo nombres de pila en las bibliotecas y en las familias.</li>
+    <li><b>Resúmenes:</b> 2-3 líneas, tono infantil, sin contenido sexista, discriminatorio ni malsonante, y <b>nunca inventados</b>. Si no hay una sinopsis fiable, déjalo vacío.</li>
+    <li><b>Libros en euskera:</b> van a la colección «En euskera», con el nombre de la serie dentro del título.</li>
+  </ul>
+  <h3>Resúmenes escritos por la IA</h3>
+  <p>Salen marcados como <b>«✨ resumen IA · sin revisar»</b>. Ábrelos en <b>Editar</b>, léelos y marca «lo he revisado» (o cambia el texto). En el panel ves cuántos quedan en cada biblioteca.</p>
+  <h3>Mantenimiento</h3>
+  <ul>
+    <li><b>✨ Completar datos que faltan</b> (panel o cada biblioteca): busca resumen, número, páginas o portada para los libros incompletos. Solo acepta coincidencias de título (y autor si lo hay), te enseña los cambios de 10 en 10 y nunca sustituye lo que ya estaba escrito.</li>
+    <li><b>Colecciones</b>: junta nombres escritos de varias formas («isadora moon» y «Isadora Moon») y renombra una colección en todos sus libros.</li>
+    <li><b>Editar un libro</b>: datos, portada (subir o pegar una dirección), mover a otra biblioteca, marcar como <b>perdido</b> (desaparece de la estantería) o borrarlo.</li>
+    <li><b>Biblioteca</b>: cambiar el nombre, elegir la familia dueña, marcarla como «solo para mirar» o borrarla.</li>
+  </ul>
+</section>
+
+<!-- 9 FAMILIAS -->
+<section class="cap">
+  <h2 style="--c:var(--rosa)"><span class="n">9</span>Familias</h2>
+  <img class="foto" src="familias2.png" style="width:78%;margin-inline:auto">
+  <p>Cada familia tiene <b>una cuenta</b>, que lleva una persona adulta. Solo las familias con cuenta pueden pedir libros, y <b>cada familia responde de los libros que tiene prestados</b>.</p>
+  <ol class="pasos">
+    <li>En <b>/admin → Familias → Nueva familia</b>, escribe el nombre que verán las demás familias. El usuario se crea solo si lo dejas vacío.</li>
+    <li>Marca sus bibliotecas: la familia dueña es quien acepta los préstamos de esos libros.</li>
+    <li>Pulsa <span class="boton">Crear y sacar enlace de invitación</span>. Copia el enlace y mándaselo por WhatsApp, Telegram o correo. Sirve <b>una sola vez</b> y caduca en <b>7 días</b>. Con él eligen su contraseña.</li>
+  </ol>
+  <table>
+    <tr><th>Para…</th><th>Haz esto</th></tr>
+    <tr><td>Contraseña olvidada</td><td>Abre la familia → <b>Nuevo enlace</b>. Con él ponen una contraseña nueva.</td></tr>
+    <tr><td>Cambiar sus bibliotecas</td><td>Abre la familia y marca o desmarca. También desde la página de cada biblioteca.</td></tr>
+    <tr><td>Que no pueda entrar</td><td>Quita «Cuenta activa». Su historial se conserva.</td></tr>
+    <tr><td>Borrarla</td><td>Abajo del todo, escribiendo su nombre. Solo si no tiene préstamos en marcha. En el historial de las demás sale como «Familia borrada».</td></tr>
+    <tr><td>Quitarle Telegram</td><td>Abre la familia → <b>Desvincular Telegram</b>.</td></tr>
+  </table>
+  <div class="caja info"><b class="t">Bibliotecas sin familia</b>
+    <p>Una biblioteca sin familia dueña se ve en la estantería, pero sus libros no se pueden pedir. Lo mismo pasa si la familia la marca como «solo para mirar».</p></div>
+</section>
+
+<!-- 10 PRÉSTAMOS -->
+<section class="cap">
+  <h2 style="--c:var(--verde)"><span class="n">10</span>Préstamos</h2>
+  <p>La regla: <b>quien dice algo que le conviene necesita que la otra familia lo confirme</b>. «Te lo he dado» lo confirma quien lo recibe, y «Te lo he devuelto» lo confirma la dueña.</p>
+  <table>
+    <tr><th>Paso</th><th>Quién</th><th>Botón</th><th>Queda</th></tr>
+    <tr><td>1</td><td>Quien lo quiere</td><td>«¿Me lo prestas?» en la estantería</td><td>Pedido</td></tr>
+    <tr><td>2</td><td>Dueña</td><td>«Aceptar» o «Ahora no puedo»</td><td>Aceptado</td></tr>
+    <tr><td>3</td><td>Dueña</td><td>«Ya se lo he dado»</td><td>Entregado</td></tr>
+    <tr><td>4</td><td>Quien lo recibe</td><td>«Lo tenemos»</td><td><b>Prestado</b> (21 días)</td></tr>
+    <tr><td>5</td><td>Quien lo tiene</td><td>«Ya lo hemos devuelto»</td><td>Falta confirmar</td></tr>
+    <tr><td>6</td><td>Dueña</td><td>«Ya lo tengo de vuelta»</td><td><b>Devuelto</b></td></tr>
+  </table>
+  <ul>
+    <li><b>Préstamo en persona:</b> la dueña lo apunta en Mi cuenta y la otra familia confirma «Lo tenemos».</li>
+    <li><b>Más tiempo:</b> «Pedir 14 días más», y la dueña acepta o no.</li>
+    <li><b>Avísame cuando vuelva</b>, <b>perdido</b> (lo marca la dueña) y <b>solo para mirar</b>.</li>
+  </ul>
+  <img class="foto" src="prestamos2.png" style="width:78%;margin-inline:auto">
+  <h3>Desacuerdos</h3>
+  <p>Si una familia pulsa «No lo hemos recibido» o «No me ha llegado», el préstamo queda <b>en desacuerdo</b>: te llega un aviso y sale arriba en <b>/admin → Préstamos</b>. Habla con las dos familias y en <span class="boton sec">Ver</span> decide cómo queda: <b>sigue prestado</b>, <b>devuelto</b>, <b>cancelado</b> o <b>perdido</b>. Se avisa a las dos. Desde ahí también puedes cambiar la fecha de devolución, y todo queda en el historial del préstamo.</p>
+  <h3>Recordatorios (cada día a las 10:00)</h3>
+  <ul>
+    <li>A quien tiene el libro: 3 días antes y el día que vence.</li>
+    <li>A las dos familias: una vez por semana si hay retraso.</li>
+    <li>A quien tenga algo sin contestar desde hace 2 días: cada 3 días.</li>
+  </ul>
+</section>
+
+<!-- 11 COPIAS / 12 ACTUALIZAR -->
+<section class="cap">
+  <h2 style="--c:var(--amarillo)"><span class="n">11</span>Copias de seguridad</h2>
+  <table>
+    <tr><th>Copia</th><th>Cuándo</th><th>Dónde</th></tr>
+    <tr><td>Base de datos + portadas</td><td>Cada día (14 días)</td><td><code>/var/backups/estanteria/</code></td></tr>
+    <tr><td>Base de datos</td><td>Antes de cada actualización</td><td><code>/var/backups/estanteria/</code></td></tr>
+    <tr><td>Base de datos</td><td>Cada domingo</td><td>Tu Telegram de administración</td></tr>
+    <tr><td>Todo en un .zip</td><td>Cuando pulses el botón</td><td>Panel → Descargar copia</td></tr>
+  </table>
+  <p><b>Restaurar:</b> en el panel, <b>Importar una copia de seguridad</b>. Sirve el .zip del panel (con portadas) o la base de datos sola (<code>.db</code>, o el <code>.db.gz</code> de Telegram). Se sustituyen todos los datos, y lo que había se guarda antes en <code>/var/lib/estanteria/copias/</code>.</p>
+  <div class="caja ojo"><b class="t">Copia también el contenedor entero</b>
+    <p>Las copias de dentro del contenedor no sirven si se rompe el disco. En Proxmox, programa una copia en <b>Datacenter → Backup → Add</b>, a otro disco o a un Proxmox Backup Server, y descarga el .zip de vez en cuando.</p></div>
+
+  <h2 style="--c:var(--azul);margin-top:7mm"><span class="n">12</span>Actualizar</h2>
+  <img class="foto" src="actualizar2.png" style="width:62%;margin-inline:auto">
+  <p>En <b>/admin → Actualizar</b> ves la versión instalada, la última publicada en GitHub y sus novedades. Pulsa <span class="boton">Instalar</span> y sigue el registro en directo: la web se reinicia al final. Si hay versión nueva, el menú lo muestra con 🎉 y te avisa una vez por Telegram. Se conservan los datos, las contraseñas y la configuración, y antes se guarda una copia.</p>
+  <p>También desde el host de Proxmox:</p>
+  <pre>bash -c "$(curl -fsSL https://raw.githubusercontent.com/hombrelobo2/biblioteca/main/proxmox/estanteria.sh)" -- actualizar 114</pre>
+  <p class="muted">Las instalaciones anteriores a la versión 1.1 se actualizan la primera vez así. Después ya pueden hacerlo desde la web.</p>
+</section>
+
+<!-- 13 COMANDOS -->
+<section class="cap salto">
+  <h2 style="--c:var(--rosa)"><span class="n">13</span>Comandos y problemas frecuentes</h2>
+  <p>Dentro del contenedor (<code>pct enter 114</code> desde el host):</p>
+  <table>
+    <tr><th>Para…</th><th>Comando</th></tr>
+    <tr><td>Actualizar</td><td><code>estanteria-actualizar</code></td></tr>
+    <tr><td>Cambiar la contraseña de admin</td><td><code>estanteria-cambiar-clave</code></td></tr>
+    <tr><td>Aplicar cambios del .env</td><td><code>systemctl restart estanteria estanteria-bot</code></td></tr>
+    <tr><td>Ver errores de la web</td><td><code>journalctl -u estanteria -n 50</code></td></tr>
+    <tr><td>Ver errores del bot</td><td><code>journalctl -u estanteria-bot -n 50</code></td></tr>
+    <tr><td>Mandar ya los recordatorios</td><td><code>systemctl start estanteria-tareas</code></td></tr>
+    <tr><td>Ver cuándo tocan las tareas</td><td><code>systemctl list-timers estanteria-tareas.timer</code></td></tr>
+  </table>
+  <table style="font-size:9pt">
+    <tr><th>Problema</th><th>Solución</th></tr>
+    <tr><td>Carga con la IP pero no con el dominio</td><td>Revisa que el proxy apunte a la IP del contenedor y al puerto 80 (no a <code>localhost</code>).</td></tr>
+    <tr><td>«Formulario caducado»</td><td>Recarga la página. Si pasa siempre por HTTPS, comprueba que el proxy manda <code>X-Forwarded-Proto</code> (Nginx Proxy Manager lo hace).</td></tr>
+    <tr><td>«Google Books: error 429»</td><td>Se acabó el cupo diario: pon <code>GOOGLE_BOOKS_KEY</code> (capítulo 7). Las otras fuentes siguen funcionando.</td></tr>
+    <tr><td>No sale el botón de la foto</td><td>Falta <code>GEMINI_API_KEY</code> o no has reiniciado.</td></tr>
+    <tr><td>Gemini da error 503 o «ocupado»</td><td>Hay mucha demanda: se reintenta solo con otros modelos. Prueba más tarde.</td></tr>
+    <tr><td>No llegan avisos de Telegram</td><td>Mira <code>journalctl -u estanteria-bot</code>. <i>Unauthorized</i> = token mal copiado. <i>Conflict</i> o <i>webhook</i> = el bot se usa en otro sitio: crea uno nuevo.</td></tr>
+    <tr><td>Las invitaciones salen con <code>http://IP</code></td><td>Rellena <code>ESTANTERIA_URL</code> y reinicia.</td></tr>
+    <tr><td>Los recordatorios salen a otra hora</td><td>Zona horaria del contenedor: <code>timedatectl set-timezone Europe/Madrid</code>.</td></tr>
+    <tr><td>El contenedor no tiene internet</td><td>En el host: <code>pct config 114</code> para ver la red; <code>pct set 114 --nameserver 1.1.1.1</code> para poner un DNS.</td></tr>
+  </table>
+  <div style="display:flex;align-items:center;gap:5mm;margin-top:2mm;break-inside:avoid">
+    <svg viewBox="0 0 120 120" width="64" height="64"><use href="#buho"/></svg>
+    <div class="caja ok" style="flex:1;margin:0"><b class="t">¿Algo no funciona o tienes una idea?</b>
+      <p>Abre una incidencia en <b>github.com/hombrelobo2/biblioteca/issues</b>. Nuestra Estantería es software libre con licencia <b>GNU GPL v3</b>.</p></div>
+  </div>
+</section>
+
+</body>
+</html>

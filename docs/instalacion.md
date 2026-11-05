@@ -48,7 +48,7 @@ Después pon la dirección en `ESTANTERIA_URL` ([configuración](configuracion.m
 
 **`/admin` mejor solo desde casa.** Dos maneras de hacerlo:
 
-- En el proxy: en Nginx Proxy Manager, pestaña *Custom locations*, crea `/admin` con una *Access List* que solo permita tu red.
+- En el proxy: en Nginx Proxy Manager, pestaña *Custom Locations*, crea la ubicación `/admin` hacia la misma IP y puerto, pulsa el engranaje ⚙ y escribe `allow 192.168.1.0/24; deny all;` (ajusta tu red).
 - En el contenedor: en `/etc/nginx/sites-available/estanteria`, dentro de `location /admin`, quita las almohadillas de `allow 192.168.1.0/24; deny all;`, ajusta la red y ejecuta `systemctl reload nginx`. **Ojo:** si el proxy está en tu misma red, todas las visitas parecen venir de la IP del proxy, así que esta opción solo sirve si el proxy está en otra red. Entonces bloquéalo en el proxy.
 
 ## Copias de seguridad

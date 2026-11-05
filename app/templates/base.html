@@ -86,6 +86,7 @@ details summary{cursor:pointer;font-weight:700}
 {% block cuerpo %}{% endblock %}
 <footer class="muted" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line);font-size:13px;text-align:center">
   <a href="https://github.com/hombrelobo2/biblioteca" rel="noopener">Nuestra Estantería</a> · software libre con licencia <a href="https://www.gnu.org/licenses/gpl-3.0.html" rel="noopener license">GPL v3</a>
+  {% if session.admin %}· <a href="https://github.com/hombrelobo2/biblioteca/blob/main/docs/manual-administracion.pdf" rel="noopener">Manual (PDF)</a>{% endif %}
   · <button class="btn small" id="tema" type="button">🌙 Modo oscuro</button>
 </footer>
 </main>

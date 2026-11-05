@@ -1,5 +1,9 @@
 # Novedades
 
+## 1.2.3 — 2026-11-05
+
+- Manual de administración en PDF (instalación en Proxmox, HTTPS, Telegram, Gemini, libros, familias, préstamos, copias y actualizaciones), enlazado al pie de /admin.
+
 ## 1.2.2 — 2026-11-05
 
 - Guía para niños y niñas en PDF (qué es la estantería y cómo se usa), enlazada al pie de la estantería.
